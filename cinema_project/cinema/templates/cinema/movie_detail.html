@@ -1,0 +1,522 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block content %}
+{% if messages %}
+  <div class="message-container">
+    {% for message in messages %}
+      <div class="alert" id="flash-message">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+<script>
+  setTimeout(() => {
+    const flash = document.getElementById("flash-message");
+    if (flash) {
+      flash.style.opacity = "0";
+      setTimeout(() => flash.remove(), 1000);
+    }
+  }, 3000);
+</script>
+
+<style>
+.message-container {
+  margin-bottom: 20px;
+}
+
+.alert {
+  padding: 12px 16px;
+  background-color: #e6ffe6;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+  border-radius: 8px;
+  font-weight: 500;
+  opacity: 1;
+  transition: opacity 1s ease;
+}
+
+body.dark-mode .alert {
+  background-color: #2a3d2a;
+  color: #c8f7c5;
+  border-color: #4caf50;
+}
+
+  html, body {
+      margin: 0;
+      padding: 0;
+      transition: background-color 0.3s, color 0.3s;
+  }
+
+  .movie-hero {
+    position: relative;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.2)), url("{{ movie.poster.url }}");
+    background-size: cover;
+    background-position: center;
+    height: 500px;
+    border-radius: 12px;
+    margin-bottom: 40px;
+    color: white;
+    display: flex;
+    align-items: flex-end;
+    padding: 30px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+
+  .movie-info {
+    background-color: var(--info-bg);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    margin-bottom: 40px;
+  }
+
+  .movie-info h2 {
+    font-size: 32px;
+    font-weight: bold;
+    margin-bottom: 15px;
+  }
+
+  .movie-info .badge {
+    font-size: 14px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin-right: 10px;
+    color: var(--badge-text);
+    background-color: var(--badge-bg);
+  }
+
+  .movie-info p {
+    font-size: 16px;
+    line-height: 1.6;
+    margin-top: 10px;
+    color: var(--text-color);
+  }
+
+  .date-tabs {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+  }
+
+  .date-tab {
+    background-color: var(--tab-bg);
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+    color: var(--text-color);
+  }
+
+  .date-tab.active {
+    background-color: #4CAF50;
+    color: white;
+    font-weight: bold;
+  }
+
+  .hall-section {
+    margin-bottom: 30px;
+  }
+
+  .hall-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 12px;
+  }
+
+  .session-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .session-button {
+    padding: 8px 16px;
+    background-color: var(--session-bg);
+    border-radius: 6px;
+    text-decoration: none;
+    color: var(--session-text);
+    font-weight: 500;
+    transition: 0.3s;
+  }
+
+  .session-button:hover {
+    background-color: #4CAF50;
+    color: white;
+  }
+
+  :root {
+    --info-bg: white;
+    --badge-bg: #f0f0f0;
+    --badge-text: #000;
+    --tab-bg: #ddd;
+    --session-bg: #e0e0e0;
+    --session-text: #000;
+    --text-color: #111;
+  }
+
+  body.dark-mode {
+    --info-bg: #1e1e1e;
+    --badge-bg: #2a2a2a;
+    --badge-text: #ddd;
+    --tab-bg: #2a2a2a;
+    --session-bg: #2a2a2a;
+    --session-text: #ddd;
+    --text-color: #ddd;
+  }
+  .review-hint {
+  color: var(--text-color, #666);
+  font-style: italic;
+  opacity: 0.8;
+}
+/* Іконки: edit / delete */
+.review-actions i {
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text-color);
+  transition: transform 0.2s, color 0.2s;
+}
+
+.review-actions i:hover {
+  transform: scale(1.2);
+  color: #4CAF50;
+}
+
+/* Модальне вікно Bootstrap */
+.modal-content {
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  transition: all 0.3s ease-in-out;
+}
+
+.modal-header, .modal-body, .modal-footer {
+  background-color: var(--info-bg);
+  color: var(--text-color);
+  border: none;
+}
+
+.modal-footer .btn {
+  transition: transform 0.2s, background-color 0.3s;
+}
+
+.modal-footer .btn:hover {
+  transform: scale(1.05);
+}
+
+</style>
+
+<div class="movie-hero">
+  <div><h1>{{ movie.title }}</h1></div>
+</div>
+
+<div class="movie-info container">
+  <h2>{{ movie.title }}</h2>
+  <span class="badge">{{ movie.genre }}</span>
+  <span class="badge">⏱ {{ movie.duration }} хв</span>
+  <span class="badge">⭐ {{ movie.rating }}/10</span>
+  <p>{{ movie.description }}</p>
+</div>
+
+<!-- Сеанси -->
+<div class="container">
+  <h3 class="mb-3">Сеанси</h3>
+  <div class="date-tabs">
+    {% for date in unique_dates %}
+      <div class="date-tab {% if forloop.first %}active{% endif %}" data-date="{{ date }}">{{ date|date:"d.m.Y" }}</div>
+    {% endfor %}
+  </div>
+  {% for hall in halls %}
+    <div class="hall-section" data-hall="{{ hall.id }}">
+      <div class="hall-title">Зал {{ hall.number }} — {{ hall.type }}</div>
+      <div class="session-buttons">
+        {% for date in unique_dates %}
+          {% with sessions=sessions_by_date|get_item:date|get_item:hall.id %}
+            {% if sessions %}
+              {% for session in sessions %}
+                <a href="{% url 'booking' session.id %}" class="session-button" data-date="{{ session.date }}" data-hall="{{ hall.id }}">
+                  {{ session.start_time|time:"H:i" }}
+                </a>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+
+<!-- Відгуки -->
+<div class="container mt-5">
+  <h3 class="mb-3"><i class="bi bi-chat-dots"></i> Відгуки</h3>
+
+  {% if can_review %}
+    <form method="post" class="review-form">
+      {% csrf_token %}
+      <label class="form-label">Оцінка:</label>
+      <div class="star-rating mb-3">
+        {% for i in "54321" %}
+          <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}">
+          <label for="star{{ i }}">★</label>
+        {% endfor %}
+      </div>
+      <div class="mb-3">{{ review_form.text }}</div>
+      <button type="submit" class="btn btn-success">Надіслати відгук</button>
+    </form>
+
+  {% elif review %}
+    <div class="user-review-block position-relative p-3 rounded mb-4" style="background-color: var(--info-bg); border: 1px solid #444;">
+      <div class="d-flex justify-content-between align-items-start">
+        <strong>Ваш відгук:</strong>
+        <div class="review-actions">
+          <i class="bi bi-pencil edit-review-btn me-2" title="Редагувати" style="cursor: pointer;"></i>
+          <i class="bi bi-trash delete-review-btn" title="Видалити" data-bs-toggle="modal" data-bs-target="#deleteModal" style="cursor: pointer;"></i>
+        </div>
+      </div>
+
+      <div class="text-warning fs-4 mb-2 user-rating">
+        {% for i in "12345" %}
+          {% if forloop.counter <= review.rating %}★{% endif %}
+        {% endfor %}
+      </div>
+      <p class="user-review-text">{{ review.text }}</p>
+
+      <form method="post" class="edit-review-form d-none mt-3" data-url="{% url 'update_review' movie.id %}">
+        {% csrf_token %}
+        <div class="star-rating mb-3">
+          {% for i in "54321" %}
+            <input type="radio" id="edit-star{{ i }}" name="rating" value="{{ i }}" {% if review.rating|stringformat:"s" == i %}checked{% endif %}>
+            <label for="edit-star{{ i }}">★</label>
+          {% endfor %}
+        </div>
+        <textarea name="text" rows="3" class="form-control review-textarea">{{ review.text }}</textarea>
+        <button type="submit" class="btn btn-success btn-sm mt-2">Зберегти</button>
+        <button type="button" class="btn btn-secondary btn-sm mt-2 cancel-edit-btn">Скасувати</button>
+      </form>
+    </div>
+  {% endif %}
+
+  <hr class="my-4">
+  <h4 class="mb-3">Інші відгуки</h4>
+  {% for r in all_reviews %}
+    {% if r.user != request.user %}
+      <div class="p-3 mb-3 rounded" style="background-color: var(--info-bg); border: 1px solid #444;">
+        <div class="d-flex justify-content-between">
+          <strong>{{ r.user.username }}</strong>
+          <small class="text-muted">{{ r.created_at|date:"d.m.Y H:i" }}</small>
+        </div>
+        <div class="text-warning fs-5 mb-2">
+          {% for i in "12345" %}
+            {% if forloop.counter <= r.rating %}★{% endif %}
+          {% endfor %}
+        </div>
+        <div>{{ r.text }}</div>
+      </div>
+    {% endif %}
+  {% empty %}
+    <p style="color: var(--text-color); opacity: 0.6; font-style: italic;">Ще немає відгуків.</p>
+  {% endfor %}
+</div>
+
+<!-- Модальне вікно -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background-color: var(--info-bg); color: var(--text-color);">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel">Підтвердження видалення</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+      </div>
+      <div class="modal-body">
+        Ви справді хочете видалити свій відгук?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Видалити</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JS -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const dateTabs = document.querySelectorAll('.date-tab');
+  const sessionButtons = document.querySelectorAll('.session-button');
+  const hallSections = document.querySelectorAll('.hall-section');
+
+  const initialDate = dateTabs[0]?.dataset.date;
+  if (initialDate) {
+    dateTabs[0].classList.add('active');
+    sessionButtons.forEach(btn => {
+      btn.style.display = (btn.dataset.date === initialDate) ? 'inline-block' : 'none';
+    });
+    hallSections.forEach(hall => {
+      const visible = hall.querySelectorAll(`.session-button[data-date="${initialDate}"]`);
+      hall.style.display = visible.length ? 'block' : 'none';
+    });
+  }
+
+  dateTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const selectedDate = tab.dataset.date;
+      dateTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      sessionButtons.forEach(btn => {
+        btn.style.display = (btn.dataset.date === selectedDate) ? 'inline-block' : 'none';
+      });
+      hallSections.forEach(hall => {
+        const visible = hall.querySelectorAll(`.session-button[data-date="${selectedDate}"]`);
+        hall.style.display = visible.length ? 'block' : 'none';
+      });
+    });
+  });
+
+  const editBtn = document.querySelector(".edit-review-btn");
+  const form = document.querySelector(".edit-review-form");
+  const cancelBtn = document.querySelector(".cancel-edit-btn");
+  const ratingBlock = document.querySelector(".user-rating");
+  const textBlock = document.querySelector(".user-review-text");
+
+  if (editBtn && form && cancelBtn) {
+    editBtn.addEventListener("click", () => {
+      form.classList.remove("d-none");
+      editBtn.classList.add("d-none");
+    });
+    cancelBtn.addEventListener("click", () => {
+      form.classList.add("d-none");
+      editBtn.classList.remove("d-none");
+    });
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const ratingInput = form.querySelector("input[name='rating']:checked");
+      if (!ratingInput) {
+        alert("Будь ласка, оберіть рейтинг.");
+        return;
+      }
+      fetch(form.dataset.url, {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": formData.get("csrfmiddlewaretoken"),
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        credentials: "same-origin",
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          textBlock.textContent = data.text;
+          ratingBlock.innerHTML = "★".repeat(data.rating);
+          form.classList.add("d-none");
+          editBtn.classList.remove("d-none");
+        } else {
+          alert("Помилка при збереженні.");
+        }
+      })
+      .catch(err => console.error("AJAX error:", err));
+    });
+  }
+
+  const confirmBtn = document.getElementById("confirmDeleteBtn");
+  confirmBtn?.addEventListener("click", () => {
+    fetch("{% url 'delete_review' movie.id %}", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+        "X-Requested-With": "XMLHttpRequest"
+      },
+      credentials: "same-origin"
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();
+      } else {
+        alert("Помилка при видаленні.");
+      }
+    })
+    .catch(err => console.error("AJAX error:", err));
+  });
+});
+</script>
+
+
+
+<style>
+  .star-rating {
+    direction: rtl;
+    font-size: 2rem;
+    display: inline-flex;
+    gap: 0.2em;
+    user-select: none;
+  }
+
+  .star-rating input {
+    display: none;
+  }
+
+  .star-rating label {
+    color: #999;
+    cursor: pointer;
+    transition: transform 0.2s, color 0.2s;
+  }
+
+  .star-rating input:checked ~ label,
+  .star-rating label:hover,
+  .star-rating label:hover ~ label {
+    color: gold;
+    transform: scale(1.2);
+  }
+
+  body.dark-mode .star-rating label {
+    color: #666;
+  }
+
+  body.dark-mode .star-rating input:checked ~ label,
+  body.dark-mode .star-rating label:hover,
+  body.dark-mode .star-rating label:hover ~ label {
+    color: #ffc107;
+  }
+
+  .review-textarea {
+    background-color: var(--info-bg);
+    color: var(--text-color);
+    border: 1px solid #666;
+  }
+
+  .review-textarea::placeholder {
+    color: #aaa;
+  }
+  .review-textarea {
+  background-color: var(--info-bg);
+  color: var(--text-color);
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 10px;
+  transition: background-color 0.3s, color 0.3s, border 0.3s;
+}
+
+.review-textarea:focus {
+  background-color: var(--info-bg);
+  color: var(--text-color);
+  border: 1px solid #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.25);
+  outline: none;
+}
+
+body.dark-mode .review-textarea {
+  background-color: #1e1e1e;
+  color: #ddd;
+  border: 1px solid #555;
+}
+
+body.dark-mode .review-textarea:focus {
+  background-color: #1e1e1e;
+  color: #fff;
+  border: 1px solid #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.4);
+}
+
+</style>
+
+{% endblock %}

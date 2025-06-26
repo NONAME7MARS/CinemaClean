@@ -1,0 +1,64 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}Кінотеатр «Зоряний» | {{ block.super }}{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'css/admin_custom.css' %}">
+    <style>
+        html {
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+        #theme-toggle {
+            margin-left: 6px;
+            padding: 4px 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.5s ease;
+        }
+        #theme-toggle.rotating {
+            transform: rotate(360deg);
+        }
+    </style>
+{% endblock %}
+
+{% block branding %}
+    <h1 id="site-name">🎬 Кінотеатр «Зоряний» — Адмінка</h1>
+{% endblock %}
+
+{% block usertools %}
+<div id="user-tools">
+    <strong>Вітаємо, {{ user.username }}</strong>
+    <a href="/">Дивитися сайт</a>
+    <a href="{% url 'admin:password_change' %}">Змінити пароль</a>
+    <a href="{% url 'admin:logout' %}">Вийти</a>
+    <span id="theme-toggle" title="Перемкнути тему">🌗</span>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.getElementById("theme-toggle");
+    const html = document.documentElement;
+    const body = document.body;
+
+    const applyTheme = (theme) => {
+        html.setAttribute("data-theme", theme);
+        body.classList.toggle("dark-theme", theme === "dark");
+        localStorage.setItem("theme", theme);
+    };
+
+    // Встановлення збереженої теми
+    const savedTheme = localStorage.getItem("theme") || "light";
+    applyTheme(savedTheme);
+
+    // Обробка кліку
+    toggle.addEventListener("click", () => {
+        const newTheme = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        toggle.classList.add("rotating");
+        applyTheme(newTheme);
+        setTimeout(() => toggle.classList.remove("rotating"), 400);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Вхід{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+  <div class="auth-card">
+    <h2 class="auth-title" style="color: var(--link-color, #4CAF50);">
+      <i class="bi bi-box-arrow-in-right me-2"></i>Вхід до кабінету
+    </h2>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="mb-3">
+          <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}
+            <div class="form-text text-danger">{{ field.errors|striptags }}</div>
+          {% endif %}
+        </div>
+      {% endfor %}
+      <button type="submit" class="btn btn-success w-100 fw-bold">Увійти</button>
+      <div class="text-center mt-3">
+        <small>Ще не маєте акаунта? <a href="{% url 'register' %}" class="text-decoration-underline">Зареєструйтесь</a></small>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+.auth-card {
+  background: var(--card-bg, #1c1c1c);
+  color: var(--text-color, #fff);
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 255, 0, 0.1);
+  width: 100%;
+  max-width: 450px;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+.auth-title {
+  text-align: center;
+  margin-bottom: 24px;
+  font-size: 26px;
+}
+.auth-card label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.auth-card input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background-color: rgba(255,255,255,0.05);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+.auth-card input:focus {
+  border-color: #4CAF50;
+  background-color: rgba(255,255,255,0.08);
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+}
+body.light-mode .auth-card {
+  background: #fff;
+  color: #111;
+  border: 1px solid #ddd;
+}
+body.light-mode .auth-card input {
+  background-color: #f9f9f9;
+  color: #000;
+  border: 1px solid #ccc;
+}
+body.light-mode .auth-card input:focus {
+  border-color: #4CAF50;
+  background-color: #fff;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.2);
+}
+</style>
+{% endblock %}

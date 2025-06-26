@@ -1,0 +1,266 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+/* === Змінні для тем === */
+:root {
+    --bg-color: #f4f4f9;
+    --text-color: #222;
+    --card-bg: #fff;
+    --header-bg: linear-gradient(to right, #007acc, #005fa3);
+    --header-text: #fff;
+    --link-color: #007acc;
+    --button-hover: #005fa3;
+    --input-border: #ccc;
+    --input-focus: #007acc;
+    --shadow-light: rgba(0, 0, 0, 0.06);
+    --shadow-heavy: rgba(0, 0, 0, 0.2);
+    --button-gradient: linear-gradient(45deg, #007acc, #005fa3);
+}
+
+body.dark-theme {
+    --bg-color: #121212;
+    --text-color: #f0f0f0;
+    --card-bg: #1f1f1f;
+    --header-bg: linear-gradient(to right, #1e3c72, #2a5298);
+    --header-text: #fff;
+    --link-color: #50b7ff;
+    --button-hover: #318acc;
+    --input-border: #444;
+    --input-focus: #50b7ff;
+    --shadow-light: rgba(0, 0, 0, 0.3);
+    --shadow-heavy: rgba(0, 0, 0, 0.5);
+    --button-gradient: linear-gradient(45deg, #50b7ff, #318acc);
+}
+
+/* === Загальні стилі === */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+/* Header */
+#header {
+    background: var(--header-bg);
+    color: var(--header-text);
+    padding: 12px 20px;
+    box-shadow: 0 4px 10px var(--shadow-heavy);
+}
+
+#header a {
+    color: var(--header-text) !important;
+    font-weight: 600;
+    font-size: 16px;
+    text-decoration: none;
+    transition: opacity 0.3s ease;
+}
+
+#header a:hover {
+    opacity: 0.8;
+}
+
+#theme-toggle {
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: transform 0.4s ease;
+}
+#theme-toggle.rotating {
+    transform: rotate(360deg);
+}
+
+
+/* User tools */
+#user-tools {
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+#user-tools a {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--header-text);
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+#user-tools a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Модулі */
+.module {
+    background: var(--card-bg);
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 6px 16px var(--shadow-light);
+    padding: 24px;
+    margin-bottom: 24px;
+    transition: transform 0.2s ease, background-color 0.3s ease;
+}
+
+.module:hover {
+    transform: translateY(-4px);
+}
+
+/* Кнопки Material style */
+button,
+input[type="submit"],
+.button {
+    background: var(--button-gradient);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 2px 6px var(--shadow-heavy);
+}
+
+button:hover,
+input[type="submit"]:hover,
+.button:hover {
+    transform: scale(1.03);
+    box-shadow: 0 4px 12px var(--shadow-heavy);
+}
+
+/* Поля */
+input[type="text"],
+input[type="date"],
+input[type="email"],
+input[type="number"],
+select,
+textarea {
+    border-radius: 6px;
+    border: 1px solid var(--input-border);
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    padding: 8px 12px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--input-focus);
+    outline: none;
+}
+
+/* Список моделей */
+#content-main .app-admin {
+    border: none;
+    background: none;
+}
+
+#content-main .module h2 {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--link-color);
+}
+
+/* Footer */
+#footer {
+    background-color: var(--header-bg);
+    color: #ccc;
+    text-align: center;
+    padding: 10px;
+    font-size: 13px;
+    border-top: 1px solid #333;
+}
+
+/* Фільтри */
+#changelist-filter,
+.module.filter {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 10px var(--shadow-light);
+    padding: 15px;
+    border: none;
+    margin-bottom: 20px;
+}
+
+#changelist-filter h2,
+.module.filter h2 {
+    background-color: #318acc !important;
+    color: #fff !important;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+
+#changelist-filter a,
+.module.filter a {
+    color: var(--link-color);
+    text-decoration: none;
+    opacity: 0.9;
+    transition: opacity 0.2s ease;
+}
+
+#changelist-filter a:hover {
+    opacity: 1;
+}
+
+#changelist-filter .selected a {
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+/* Анімації */
+body,
+#header,
+#footer,
+.module,
+input,
+select,
+textarea {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+}
+
+* {
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+/* === Виправлення: чорна кнопка навігації зліва, без збільшення === */
+.toggle-nav-sidebar {
+    background-color: #000 !important;
+    transform: none !important;
+    transition: none !important;
+    border-radius: 0 8px 8px 0 !important;
+    width: 26px !important;
+    height: 48px !important;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.toggle-nav-sidebar:hover {
+    background-color: #111 !important;
+}
+
+/* === Виправлення: текст в select не обрізається === */
+select {
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+    padding: 6px 10px !important;
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+    min-height: 38px !important;
+    white-space: normal !important;
+}
+
+/* В темній темі — теж */
+body.dark-theme select {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+}

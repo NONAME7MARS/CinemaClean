@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Контакти{% endblock %}
+
+{% block content %}
+<div class="contacts-container py-5">
+  <div class="container">
+    <h1 class="text-center mb-5 contacts-title">📞 Зв'яжіться з нами</h1>
+
+    <div class="contact-row d-flex flex-wrap justify-content-between mb-5 fade-in">
+<div class="contact-info-box flex-fill me-md-4 mb-4">
+  <h4 class="mb-4"><i class="bi bi-geo-alt-fill text-danger me-2"></i>Адреса</h4>
+  <div class="contact-item">
+    <i class="bi bi-building text-primary"></i>
+    <div>
+      <div class="label">Кінотеатр</div>
+      <div class="value">«Зоряний»</div>
+    </div>
+  </div>
+  <div class="contact-item">
+    <i class="bi bi-geo-fill text-success"></i>
+    <div>
+      <div class="label">Адреса</div>
+      <div class="value">м. Київ, вул. Кінематографічна, 7А</div>
+    </div>
+  </div>
+  <div class="contact-item">
+    <i class="bi bi-telephone-fill text-warning"></i>
+    <div>
+      <div class="label">Телефон</div>
+      <div class="value"><a href="tel:+380441112233">+38 (044) 111 22 33</a></div>
+    </div>
+  </div>
+  <div class="contact-item">
+    <i class="bi bi-envelope-fill text-info"></i>
+    <div>
+      <div class="label">Email</div>
+      <div class="value"><a href="mailto:info@zoriany-cinema.ua">info@zoriany-cinema.ua</a></div>
+    </div>
+  </div>
+  <div class="contact-item">
+    <i class="bi bi-clock-fill text-secondary"></i>
+    <div>
+      <div class="label">Графік</div>
+      <div class="value">щодня з 10:00 до 23:00</div>
+    </div>
+  </div>
+</div>
+
+
+      <div class="contact-form-box flex-fill">
+        <h4 class="mb-4"><i class="bi bi-chat-dots-fill text-light me-2"></i>Напишіть нам</h4>
+        <form method="post" action="#">
+          {% csrf_token %}
+          <div class="mb-3">
+            <input type="text" class="form-control contact-input" placeholder="Ваше ім’я" required>
+          </div>
+          <div class="mb-3">
+            <input type="email" class="form-control contact-input" placeholder="Email" required>
+          </div>
+          <div class="mb-3">
+            <textarea class="form-control contact-textarea" rows="4" placeholder="Ваше повідомлення..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-send">Надіслати</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="map-container fade-in">
+      <iframe
+        src="https://maps.google.com/maps?q=Київ,вул.Хрещатик,22&t=&z=15&ie=UTF8&iwloc=&output=embed"
+        allowfullscreen="" loading="lazy"></iframe>
+    </div>
+  </div>
+</div>
+
+<style>
+.contact-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  gap: 12px;
+}
+
+.contact-item i {
+  font-size: 1.4rem;
+  margin-top: 2px;
+}
+
+.contact-item .label {
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.contact-item .value {
+  font-size: 16px;
+  color: var(--text-color);
+}
+
+.contact-item a {
+  color: var(--link-color, #4CAF50);
+  text-decoration: none;
+}
+
+.contact-item a:hover {
+  text-decoration: underline;
+}
+
+body.light-mode .contact-item .label,
+body.light-mode .contact-item .value {
+  color: #222;
+}
+
+.contacts-container {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.contacts-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--link-color, #4CAF50);
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+}
+
+.contact-row > div {
+  min-width: 300px;
+  flex: 1 1 48%;
+}
+
+.contact-info-box,
+.contact-form-box {
+  background-color: var(--info-bg);
+  color: var(--text-color);
+  padding: 25px 30px;
+  border-radius: 16px;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08);
+  transition: 0.3s ease;
+}
+
+body.light-mode .contact-info-box,
+body.light-mode .contact-form-box {
+  background-color: #f9f9f9;
+  color: #111;
+  border: 1px solid #ddd;
+}
+
+.contact-details li {
+  font-size: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.contact-details a {
+  color: var(--link-color, #4CAF50);
+  text-decoration: none;
+}
+.contact-details a:hover {
+  text-decoration: underline;
+}
+
+/* Fade-in */
+.fade-in {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Map */
+.map-container iframe {
+  width: 100%;
+  height: 450px;
+  border: 0;
+  border-radius: 14px;
+  box-shadow: 0 6px 30px rgba(0,0,0,0.1);
+  margin-top: 30px;
+}
+
+/* Inputs */
+.contact-input,
+.contact-textarea {
+  background-color: var(--info-bg);
+  color: var(--text-color);
+  border: 1px solid #555;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 16px;
+  transition: 0.3s ease;
+}
+
+.contact-input::placeholder,
+.contact-textarea::placeholder {
+  color: var(--muted-color, #aaa);
+  opacity: 1;
+}
+
+.contact-input:focus,
+.contact-textarea:focus {
+  background-color: var(--info-bg);
+  color: var(--text-color);
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.25);
+  outline: none;
+}
+
+/* Light mode */
+body.light-mode .contact-input,
+body.light-mode .contact-textarea {
+  background-color: #fff;
+  color: #000;
+  border-color: #ccc;
+}
+body.light-mode .contact-input::placeholder,
+body.light-mode .contact-textarea::placeholder {
+  color: #777;
+}
+
+/* Submit Button */
+.btn-send {
+  background-color: var(--link-color, #4CAF50);
+  color: white;
+  border: none;
+  padding: 12px 26px;
+  font-weight: 600;
+  font-size: 16px;
+  border-radius: 10px;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+.btn-send:hover {
+  background-color: #45a049;
+  transform: scale(1.05);
+}
+</style>
+{% endblock %}

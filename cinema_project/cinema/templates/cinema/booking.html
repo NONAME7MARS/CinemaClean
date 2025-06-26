@@ -1,0 +1,445 @@
+{% extends "base.html" %}
+{% block content %}
+
+<a href="{% url 'movie_detail' session.movie.id %}" class="back-button">⬅ Назад до фільму</a>
+<h2 style="text-align: center;">Виберіть місця для сеансу: {{ session.movie.title }}</h2>
+
+<style>
+  :root {
+    --bg-color: #f0f0f0;
+    --text-color: #111;
+    --border-color: #ccc;
+    --available-color: #4CAF50;
+    --available-hover-color: rgba(76, 175, 80, 0.1);
+    --booked-color: #9E9E9E;
+    --selected-color: #FFC107;
+    --vip-color: #FF0000;
+    --screen-bg: #ddd;
+    --tooltip-bg: #222;
+    --right-bg: #f9f9f9;
+    --ticket-bg: #ffffff;
+  }
+
+  body.dark-mode {
+    --bg-color: #121212;
+    --text-color: #ddd;
+    --border-color: #333;
+    --available-color: #4CAF50;
+    --available-hover-color: rgba(76, 175, 80, 0.2);
+    --booked-color: #666;
+    --selected-color: #FFC107;
+    --vip-color: #FF6B6B;
+    --screen-bg: #444;
+    --tooltip-bg: #444;
+    --right-bg: #1a1a1a;
+    --ticket-bg: #1f1f1f;
+  }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 260px 1fr 300px;
+    gap: 30px;
+    margin-top: 20px;
+    align-items: start;
+  }
+
+  .back-button {
+    display: inline-block;
+    margin-bottom: 20px;
+    padding: 10px 18px;
+    background-color: var(--available-hover-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+  }
+
+  .back-button:hover {
+    background-color: var(--available-color);
+    color: white;
+  }
+
+  .session-info-container {
+    background-color: var(--right-bg);
+    border-left: 5px solid var(--available-color);
+    padding: 12px 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    font-size: 16px;
+    line-height: 1.4;
+    color: var(--text-color);
+  }
+
+  .main-content {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .screen {
+    width: 100%;
+    height: 50px;
+    background-color: var(--screen-bg);
+    text-align: center;
+    line-height: 50px;
+    margin: 30px auto 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 20px;
+  }
+
+  .hall {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    margin-top: 10px;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 50px repeat(10, auto) 50px;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .row-number {
+    text-align: center;
+    font-weight: bold;
+    color: var(--text-color);
+  }
+
+  .seat {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    border-radius: 5px;
+    border: 2px solid;
+    background-color: transparent;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-sizing: border-box;
+  }
+
+  .available {
+    border-color: var(--available-color);
+    color: var(--available-color);
+  }
+
+  .available:hover {
+    background-color: var(--available-hover-color);
+  }
+
+  .booked {
+    border-color: var(--booked-color) !important;
+    background-color: var(--bg-color);
+    color: var(--booked-color) !important;
+    cursor: not-allowed;
+  }
+
+  .selected {
+    background-color: var(--selected-color);
+    color: black;
+  }
+
+  .lux-seat {
+    border-color: var(--vip-color);
+    color: var(--vip-color);
+    width: 45px;
+    height: 45px;
+    margin: 0 6px;
+  }
+
+  .lux-seat:hover {
+    background-color: rgba(255, 0, 0, 0.1);
+  }
+
+  .seat.booked.lux-seat {
+    border-color: var(--booked-color) !important;
+    color: var(--booked-color) !important;
+    background-color: var(--bg-color);
+  }
+
+  .vip-label {
+    text-align: center;
+    color: var(--vip-color);
+    font-weight: bold;
+    font-size: 14px;
+    margin-top: 20px;
+  }
+
+  .tooltip {
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background-color: var(--tooltip-bg);
+    color: #fff;
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    z-index: 10;
+  }
+
+  .seat:hover .tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: var(--tooltip-bg) transparent transparent transparent;
+  }
+
+  .right {
+    background: var(--right-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .ticket-item {
+    position: relative;
+    padding: 12px;
+    border: 2px solid var(--available-color);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    background: var(--ticket-bg);
+    font-size: 15px;
+    font-weight: 500;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    color: var(--text-color);
+  }
+
+  .ticket-item .remove-btn {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 18px;
+    cursor: pointer;
+  }
+
+  .ticket-item .remove-btn:hover {
+    color: #e53935;
+  }
+
+  .summary {
+    font-weight: bold;
+    margin-top: 10px;
+  }
+
+  .floating-book-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 30px;
+    background-color: var(--available-color);
+    color: white;
+    border: none;
+    padding: 16px 26px;
+    font-size: 18px;
+    border-radius: 12px;
+    font-weight: bold;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    cursor: pointer;
+    z-index: 999;
+    display: none;
+    transition: all 0.3s ease;
+  }
+
+  .floating-book-btn:hover {
+    background-color: #43a047;
+  }
+
+  @media (max-width: 768px) {
+    .layout {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .hall {
+      overflow-x: auto;
+    }
+
+    .row {
+      width: max-content;
+      grid-template-columns: 40px repeat(10, 36px) 40px;
+      gap: 6px;
+    }
+
+    .seat {
+      width: 36px;
+      height: 36px;
+    }
+
+    .lux-seat {
+      width: 34px;
+      height: 34px;
+      margin: 0 4px;
+    }
+
+    .right {
+      margin-top: 20px;
+    }
+  }
+</style>
+
+<div class="layout">
+  <div class="session-info-container">
+    <div class="session-box">
+      <div class="session-date">
+        📅 {{ session.date|date:"d.m.Y" }}
+        <span class="weekday">{{ session.date|date:"l" }}</span>
+      </div>
+      <div class="session-time">
+        🕒 Час: <strong>{{ session.start_time|time:"H:i" }} – {{ session.end_time|time:"H:i" }}</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="screen">Екран</div>
+    <div class="hall">
+      {% for row in seat_map %}
+        {% if forloop.last %}
+          <div class="vip-label">🟊 VIP Ряд</div>
+        {% endif %}
+        <div class="row">
+          <div class="row-number">Ряд {{ row.row }}</div>
+          {% for seat in row.seats %}
+            {% with is_vip=forloop.parentloop.last %}
+              {% if seat.booked %}
+                <div class="seat booked {% if is_vip %}lux-seat{% endif %}">
+                  <div class="tooltip">{{ row.row }} ряд, {{ forloop.counter }} місце — Ціна: {% if is_vip %}250{% else %}150{% endif %} грн</div>
+                </div>
+              {% else %}
+                <div class="seat available {% if is_vip %}lux-seat{% endif %}"
+                     data-seat="{{ seat.number }}"
+                     onclick="selectSeat(this, {{ seat.number }}, {{ row.row }}, {{ forloop.counter }}, {% if is_vip %}250{% else %}150{% endif %}, '{{ is_vip|yesno:'VIP,Стандарт' }}')">
+                  <div class="tooltip">{{ row.row }} ряд, {{ forloop.counter }} місце — Ціна: {% if is_vip %}250{% else %}150{% endif %} грн</div>
+                </div>
+              {% endif %}
+            {% endwith %}
+          {% endfor %}
+          <div class="row-number">Ряд {{ row.row }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="right">
+    <h3>Обрані квитки</h3>
+    <div id="ticket-list"></div>
+    <div class="summary">
+      <span id="ticket-count">0</span> квитків — <span id="ticket-total">0 грн</span>
+    </div>
+  </div>
+</div>
+
+<button id="floatingBookBtn" class="floating-book-btn" onclick="confirmBooking()">Забронювати</button>
+
+<script>
+  let selectedSeats = [];
+  const seatData = {};
+
+  function selectSeat(el, seatNumber, row, seatPos, price, type) {
+    if (el.classList.contains("booked")) return;
+
+    if (selectedSeats.includes(seatNumber)) {
+      selectedSeats = selectedSeats.filter(num => num !== seatNumber);
+      el.classList.remove("selected");
+      delete seatData[seatNumber];
+    } else {
+      selectedSeats.push(seatNumber);
+      el.classList.add("selected");
+      seatData[seatNumber] = { row, seat: seatPos, price, type };
+    }
+    renderSidebar();
+    updateFloatingButton();
+  }
+
+  function removeTicket(seatNumber) {
+    const el = document.querySelector(`[data-seat='${seatNumber}']`);
+    if (el) el.classList.remove("selected");
+
+    selectedSeats = selectedSeats.filter(num => num !== seatNumber);
+    delete seatData[seatNumber];
+    renderSidebar();
+    updateFloatingButton();
+  }
+
+  function renderSidebar() {
+    const list = document.getElementById("ticket-list");
+    const count = document.getElementById("ticket-count");
+    const total = document.getElementById("ticket-total");
+
+    list.innerHTML = "";
+    let totalPrice = 0;
+
+    selectedSeats.forEach(id => {
+      const t = seatData[id];
+      if (t) {
+        totalPrice += t.price;
+        list.innerHTML += `
+          <div class="ticket-item" data-id="${id}">
+            <button class="remove-btn" title="Скасувати квиток" onclick="removeTicket(${id})">&times;</button>
+            ${t.row} ряд<br>
+            ${t.seat} місце — ${t.type}<br>
+            ${t.price} грн
+          </div>
+        `;
+      }
+    });
+
+    count.textContent = selectedSeats.length;
+    total.textContent = totalPrice + " грн";
+  }
+
+  function updateFloatingButton() {
+    const btn = document.getElementById("floatingBookBtn");
+    btn.style.display = selectedSeats.length > 0 ? "block" : "none";
+  }
+
+  function confirmBooking() {
+    if (selectedSeats.length === 0) {
+      alert("Оберіть хоча б одне місце!");
+      return;
+    }
+
+    fetch(`/session/{{ session.id }}/booking/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": "{{ csrf_token }}"
+      },
+      body: JSON.stringify({ seats: selectedSeats })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        window.location.href = data.redirect_url;
+      } else {
+        alert("Помилка при бронюванні: " + data.error);
+      }
+    });
+  }
+</script>
+{% endblock %}

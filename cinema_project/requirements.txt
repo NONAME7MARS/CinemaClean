@@ -1,0 +1,12 @@
+Django>=5.1.7
+python-decouple
+mysqlclient
+django-admin-interface
+colorfield
+django-plotly-dash
+django-bootstrap4
+channels
+openpyxl
+reportlab
+qrcode
+Pillow

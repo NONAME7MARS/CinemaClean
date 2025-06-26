@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Часті питання{% endblock %}
+
+{% block content %}
+<div class="faq-container py-5">
+  <div class="container">
+    <h1 class="text-center mb-5 faq-title">❓ Часті питання</h1>
+
+    {% for category, items in faq_data.items %}
+      <div class="faq-category mb-4">
+        <h3 class="faq-category-title mb-3"><i class="bi bi-bookmark-star me-2"></i>{{ category }}</h3>
+        <div class="accordion faq-accordion" id="faqAccordion{{ forloop.counter }}">
+          {% for faq in items %}
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="heading{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
+                <button class="accordion-button collapsed faq-question" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapse{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                        aria-expanded="false"
+                        aria-controls="collapse{{ forloop.parentloop.counter }}-{{ forloop.counter }}">
+                  {{ faq.question }}
+                </button>
+              </h2>
+              <div id="collapse{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                   class="accordion-collapse collapse"
+                   aria-labelledby="heading{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
+                   data-bs-parent="#faqAccordion{{ forloop.parentloop.counter }}">
+                <div class="accordion-body faq-answer">
+                  {{ faq.answer }}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+/* Контейнер */
+.faq-container {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.faq-title {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--link-color, #4CAF50);
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.faq-category-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--link-color);
+}
+
+/* Accordion */
+.faq-accordion .accordion-item {
+  background-color: var(--info-bg);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  transition: 0.3s ease;
+}
+
+.faq-accordion .accordion-button {
+  background-color: var(--info-bg);
+  color: var(--text-color) !important;
+  font-weight: 600;
+  font-size: 18px;
+  padding: 16px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  box-shadow: none;
+}
+
+.faq-accordion .accordion-button:not(.collapsed) {
+  background-color: var(--link-color, #4CAF50);
+  color: #fff !important;
+}
+
+.faq-answer {
+  background-color: var(--card-bg);
+  padding: 18px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-color);
+}
+
+/* Світла тема */
+body.light-mode .faq-accordion .accordion-item {
+  background-color: #f9f9f9;
+  border-color: #ddd;
+}
+
+body.light-mode .faq-accordion .accordion-button {
+  background-color: #f9f9f9;
+  color: #111 !important;
+}
+
+body.light-mode .faq-accordion .accordion-button:not(.collapsed) {
+  background-color: #4CAF50;
+  color: #fff !important;
+}
+
+body.light-mode .faq-answer {
+  background-color: #fff;
+  color: #111;
+}
+/* Жорстко задаємо колір тексту для темної теми */
+body.dark-mode .accordion-button {
+  color: #fff !important;
+}
+
+body.dark-mode .accordion-body {
+  color: #ddd !important;
+  background-color: var(--info-bg);
+}
+
+body.dark-mode .accordion-button:not(.collapsed) {
+  background-color: var(--link-color, #4CAF50) !important;
+  color: #fff !important;
+}
+
+</style>
+{% endblock %}

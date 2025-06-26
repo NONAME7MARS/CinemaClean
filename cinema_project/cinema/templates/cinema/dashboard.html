@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Аналітика — Кінотеатр Зоряний</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  {% load static %}
+  {% load plotly_dash %}
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      transition: background 0.6s ease, color 0.6s ease;
+    }
+
+    body.dark-mode {
+      background: #121212;
+      color: #ddd;
+    }
+
+    body.light-mode {
+      background: #f4f4f4;
+      color: #222;
+    }
+
+    h1, h2 {
+      text-align: center;
+      margin-top: 30px;
+      margin-bottom: 30px;
+      font-weight: bold;
+    }
+
+    .dash-container {
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(6px);
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
+
+    body.light-mode .dash-container {
+      background: rgba(255,255,255,0.9);
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .toggle-theme {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+
+    .toggle-theme:hover {
+      box-shadow: 0 0 12px #4CAF50;
+    }
+  </style>
+</head>
+<body>
+  <button class="toggle-theme" onclick="toggleTheme()">🌓 Змінити тему</button>
+
+  <div class="container my-5">
+    <h2>📊 Аналітика продажів квитків</h2>
+    <div class="dash-container">
+      {% plotly_app name="TicketSales" %}
+    </div>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const body = document.body;
+      if (body.classList.contains("dark-mode")) {
+        body.classList.remove("dark-mode");
+        body.classList.add("light-mode");
+        localStorage.setItem("theme", "light");
+      } else {
+        body.classList.remove("light-mode");
+        body.classList.add("dark-mode");
+        localStorage.setItem("theme", "dark");
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const saved = localStorage.getItem("theme") || "dark";
+      document.body.classList.add(saved + "-mode");
+    });
+  </script>
+</body>
+</html>

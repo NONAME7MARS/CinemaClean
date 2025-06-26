@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Про нас{% endblock %}
+
+{% block content %}
+<div class="about-container py-5">
+  <div class="container">
+    <h1 class="text-center mb-5 about-title">🎥 Про кінотеатр "Зоряний"</h1>
+
+    <div class="row align-items-center mb-5 fade-in">
+      <div class="col-md-6 mb-4 mb-md-0">
+        <img src="{% static 'images/about-cinema.png' %}" class="img-fluid rounded shadow" alt="Кінотеатр">
+      </div>
+      <div class="col-md-6">
+        <h3 class="mb-3">Найкращий кінодосвід — тут і зараз</h3>
+        <p>
+          Ми — сучасний кінотеатр нового покоління для справжніх шанувальників кіно.
+          Більше 500 комфортних місць, VIP-зони, ексклюзивні формати 3D, IMAX та Dolby Atmos.
+        </p>
+        <p>
+          Кожен сеанс — це подія. Кіно — більше, ніж розвага. Це емоції, враження, спогади.
+        </p>
+      </div>
+    </div>
+
+
+
+    <div class="features row text-center mb-5">
+      <div class="col-md-4 mb-4 feature-card">
+        <i class="bi bi-film fs-1 feature-icon text-primary"></i>
+        <h5 class="mt-3">Сучасні технології</h5>
+        <p>Новітнє обладнання та великі екрани передають кожну деталь події на екрані.</p>
+      </div>
+      <div class="col-md-4 mb-4 feature-card">
+        <i class="bi bi-cup-straw fs-1 feature-icon text-danger"></i>
+        <h5 class="mt-3">Комфорт і сервіс</h5>
+        <p>М'які крісла, чисті зали, привітний персонал і найсмачніший попкорн у місті.</p>
+      </div>
+      <div class="col-md-4 mb-4 feature-card">
+        <i class="bi bi-emoji-smile fs-1 feature-icon text-success"></i>
+        <h5 class="mt-3">Неймовірна атмосфера</h5>
+        <p>Ми створюємо затишну атмосферу для кожного глядача незалежно від віку.</p>
+      </div>
+    </div>
+    <div class="team-section text-center mb-5">
+  <h4 class="mb-4">🤝 Наш підхід</h4>
+  <p class="lead mx-auto" style="max-width: 700px;">
+    У кінотеатрі <strong>«Зоряний»</strong> ми не просто показуємо фільми — ми створюємо враження.
+    Наша команда щодня працює над тим, щоб кожен візит був комфортним, емоційним і незабутнім.
+    Від каси до останнього титру — з любов’ю до глядача.
+  </p>
+</div>
+    <div class="about-location-section rounded p-4 shadow-sm mb-5 fade-in">
+      <h4 class="text-center mb-4">📍 Де ми знаходимося</h4>
+      <p class="text-center">м. Київ, вул. Кінематографічна, 7А</p>
+      <div class="map-container text-center">
+        <iframe
+          src="https://maps.google.com/maps?q=Київ,вул.Хрещатик,22&t=&z=15&ie=UTF8&iwloc=&output=embed"
+          width="100%" height="400" style="border:0;" allowfullscreen="" loading="lazy">
+        </iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.about-container {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  transition: background 0.3s ease, color 0.3s ease;
+  scroll-behavior: smooth;
+}
+
+.about-title {
+  font-size: 38px;
+  font-weight: 800;
+  color: var(--link-color, #4CAF50);
+  text-shadow: 1px 2px 4px rgba(0,0,0,0.2);
+  letter-spacing: 0.5px;
+}
+
+.team-section {
+  background-color: var(--info-bg);
+  padding: 40px 20px;
+  border-radius: 16px;
+  box-shadow: 0 6px 30px rgba(0,0,0,0.07);
+  transition: 0.3s;
+}
+
+.team-section h4 {
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--link-color, #4CAF50);
+}
+
+.team-section p {
+  font-size: 1.15rem;
+  color: var(--text-color);
+  line-height: 1.7;
+  margin: 0 auto;
+  max-width: 720px;
+}
+
+body.light-mode .team-section p {
+  color: #222;
+}
+
+.feature-icon {
+  transition: transform 0.3s ease, filter 0.3s ease;
+  filter: drop-shadow(0 0 4px rgba(0,0,0,0.2));
+}
+
+.feature-icon:hover {
+  transform: scale(1.2);
+  filter: drop-shadow(0 0 10px rgba(0, 255, 100, 0.3));
+}
+
+.feature-card {
+  padding: 25px;
+  border-radius: 16px;
+  background: var(--info-bg);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 30px rgba(0, 255, 100, 0.15);
+}
+
+.about-location-section {
+  background-color: var(--info-bg);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  border-radius: 16px;
+}
+
+body.light-mode .about-location-section {
+  background-color: #f9f9f9;
+  color: #111;
+}
+
+.map-container iframe {
+  border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+  width: 100%;
+  height: 450px;
+  margin-top: 16px;
+}
+
+/* Анімація */
+.fade-in {
+  opacity: 0;
+  transform: translateY(40px);
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.team-section h4 {
+  color: var(--link-color, #4CAF50);
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.team-section p {
+  font-size: 1.1rem;
+  color: var(--text-color);
+  line-height: 1.6;
+}
+
+body.light-mode .team-section p {
+  color: #222;
+}
+
+.about-container {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.about-title {
+  font-size: 36px;
+  font-weight: bold;
+  color: var(--link-color, #4CAF50);
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+}
+
+.feature-icon {
+  transition: transform 0.3s ease, filter 0.3s ease;
+  filter: drop-shadow(0 0 4px rgba(0,0,0,0.2));
+}
+
+.feature-icon:hover {
+  transform: scale(1.2);
+  filter: drop-shadow(0 0 8px rgba(0, 255, 100, 0.4));
+}
+
+.feature-card {
+  padding: 20px;
+  border-radius: 12px;
+  background: var(--info-bg);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 30px rgba(0, 255, 100, 0.15);
+}
+
+.about-location-section {
+  background-color: var(--info-bg);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
+  border-radius: 16px;
+}
+
+body.light-mode .about-location-section {
+  background-color: #f9f9f9;
+  color: #111;
+}
+
+.map-container iframe {
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Анімація fade-in */
+.fade-in {
+  opacity: 0;
+  transform: translateY(30px);
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+</style>
+{% endblock %}

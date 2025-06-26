@@ -1,0 +1,444 @@
+{% extends "base.html" %}
+
+{% block content %}
+<a href="{% url 'booking' session.id %}" class="back-arrow">
+  ← Назад до вибору місць
+</a>
+
+<h2>{{ session.movie.title }}</h2>
+
+<div class="layout">
+  <!-- Session info -->
+  <div class="session-info-container">
+    <div class="session-box">
+      <div class="session-date">
+        📅 {{ session.date|date:"d.m.Y" }}
+        <span class="weekday">{{ session.date|date:"l" }}</span>
+      </div>
+      <div class="session-time">
+        🕒 Час: <strong>{{ session.start_time|time:"H:i" }} – {{ session.end_time|time:"H:i" }}</strong>
+      </div>
+    </div>
+    <div class="timer-box">
+      ⏳ <span id="countdown" class="countdown-text">05:00</span>
+    </div>
+  </div>
+
+  <!-- Payment and contact form -->
+  <div class="checkout-form">
+    <h3>Оберіть спосіб оплати</h3>
+    <div class="payment-options" id="paymentOptions">
+      <div class="payment-option" data-method="card">
+        <input type="radio" name="payment_method" value="card" hidden>
+        <img src="/static/images/card.png" alt="Card"> Платіжна картка
+      </div>
+      <div class="payment-option" data-method="googlepay">
+        <input type="radio" name="payment_method" value="googlepay" hidden>
+        <img src="/static/images/googlepay.png" alt="Google Pay"> Google Pay
+      </div>
+      <div class="payment-option" data-method="applepay">
+        <input type="radio" name="payment_method" value="applepay" hidden>
+        <img src="/static/images/applepay.png" alt="Apple Pay"> Apple Pay
+      </div>
+    </div>
+
+    <h3 style="margin-top: 30px;">Куди надіслати квитки</h3>
+    <form id="payment-form">
+      <input type="text" name="name" placeholder="Ваше ім’я" required>
+      <input type="tel" name="phone" placeholder="Номер телефону" required>
+      <input type="email" name="email" placeholder="Email" required>
+      <button type="submit" id="payButton" class="btn-book" disabled>Оплатити</button>
+    </form>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="right">
+    <h3>Обрані квитки</h3>
+    <div id="ticket-list">
+      {% for ticket in selected_tickets %}
+        <div class="ticket-item">
+          {{ ticket.row }} ряд<br>
+          {{ ticket.seat }} місце — {{ ticket.type }}<br>
+          {{ ticket.price }} грн
+        </div>
+      {% endfor %}
+    </div>
+    {% if user.is_authenticated %}
+    <form id="bonus-form" class="mb-3">
+  <div class="form-check mb-2">
+    <input class="form-check-input" type="checkbox" id="useBonusCheckbox">
+    <label class="form-check-label" for="useBonusCheckbox">
+      Використати бонуси (є {{ bonus_points }} балів)
+    </label>
+  </div>
+
+  <div id="bonusInputWrapper" class="d-none">
+    <input type="number" id="bonusAmount" name="bonus_amount" class="form-control mb-2"
+           min="0" max="{{ bonus_points }}" value="0" placeholder="Скільки балів?">
+    <small class="bonus-limit-info">Не більше за суму: {{ total_price }} грн</small>
+  </div>
+</form>
+    {% endif %}
+
+<p><strong>До сплати:</strong> <span id="finalPrice">{{ total_price }}</span> грн</p>
+
+    <div class="summary">
+      {{ selected_tickets|length }} квитків — {{ total_price }} грн
+    </div>
+  </div>
+</div>
+
+<style>
+input::placeholder {
+  color: var(--muted-color);
+  opacity: 1; /* Safari fix */
+}
+
+body.dark-mode input::placeholder {
+  color: var(--muted-color);
+}
+/* 🎁 Секція бонусів */
+#bonus-form {
+  background: var(--sidebar-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: 20px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  transition: background 0.3s, border 0.3s;
+}
+
+#bonus-form .form-check-label {
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+}
+
+#bonus-form input[type="number"] {
+  background-color: var(--input-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 15px;
+  width: 100%;
+  margin-top: 8px;
+  transition: all 0.3s ease;
+}
+
+#bonus-form input[type="number"]:focus {
+  outline: none;
+  border-color: var(--highlight);
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.25);
+}
+
+.bonus-limit-info {
+  font-size: 13px;
+  color: var(--muted-color);
+  display: block;
+  margin-top: 4px;
+}
+  :root {
+    --bg: #f9f9f9;
+    --text: #111;
+    --border: #ccc;
+    --input-bg: #fff;
+    --highlight: #4CAF50;
+    --hover: #e6f9e6;
+    --ticket-bg: #fff;
+    --sidebar-bg: #f9f9f9;
+    --countdown-bg: #fff3cd;
+    --countdown-color: #856404;
+  }
+
+  body.dark-mode {
+    --bg: #1e1e1e;
+    --text: #eee;
+    --border: #444;
+    --input-bg: #2a2a2a;
+    --hover: #2f4f2f;
+    --ticket-bg: #2a2a2a;
+    --sidebar-bg: #2e2e2e;
+    --countdown-bg: #2a2a2a;
+    --countdown-color: #f1c40f;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text);
+  }
+
+  .layout {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+
+  .back-arrow {
+    display: inline-block;
+    margin-bottom: 20px;
+    font-size: 16px;
+    text-decoration: none;
+    color: var(--highlight);
+    font-weight: bold;
+  }
+
+  .session-info-container {
+    width: 220px;
+  }
+
+  .session-box {
+    background-color: var(--sidebar-bg);
+    border-left: 5px solid var(--highlight);
+    padding: 12px 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    font-size: 16px;
+    color: var(--text);
+  }
+
+  .timer-box {
+    margin-top: 10px;
+    padding: 10px 15px;
+    background: var(--countdown-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 16px;
+    color: var(--countdown-color);
+    font-weight: bold;
+  }
+
+  .checkout-form {
+    flex: 1;
+    max-width: 500px;
+  }
+
+  .checkout-form input {
+    width: 100%;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background-color: var(--input-bg);
+    color: var(--text);
+  }
+
+  .payment-options {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .payment-option {
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 10px;
+    flex: 1 1 140px;
+    height: 130px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    cursor: pointer;
+    background: var(--input-bg);
+    color: var(--text);
+  }
+
+  .payment-option.selected {
+    border-color: var(--highlight);
+    background-color: var(--hover);
+  }
+
+  .payment-option:hover {
+    border-color: var(--highlight);
+    background-color: var(--hover);
+  }
+
+  .payment-option img {
+    width: 60px;
+    height: 40px;
+    object-fit: contain;
+    margin-bottom: 8px;
+  }
+
+  .btn-book {
+    width: 100%;
+    margin-top: 10px;
+    padding: 12px;
+    background-color: #aaa;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: not-allowed;
+  }
+
+  .btn-book.active {
+    background-color: var(--highlight);
+    cursor: pointer;
+  }
+
+  .right {
+    width: 280px;
+    background: var(--sidebar-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .ticket-item {
+    padding: 10px;
+    margin-bottom: 8px;
+    border: 1px solid var(--highlight);
+    border-radius: 6px;
+    background: var(--ticket-bg);
+  }
+
+  .summary {
+    font-weight: bold;
+    margin-top: 15px;
+  }
+
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .layout {
+      flex-direction: column;
+    }
+
+    .session-info-container,
+    .right {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .checkout-form {
+      max-width: 100%;
+    }
+
+    .payment-option {
+      flex: 1 1 100%;
+    }
+  }
+</style>
+
+<script>
+  let secondsLeft = 5 * 60;
+  function updateTimer() {
+    const minutes = Math.floor(secondsLeft / 60);
+    const seconds = secondsLeft % 60;
+    document.getElementById("countdown").textContent =
+      `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    if (secondsLeft <= 0) {
+      alert("Час вийшов. Ви будете перенаправлені.");
+      window.location.href = "{% url 'booking' session.id %}";
+      return;
+    }
+    secondsLeft--;
+    setTimeout(updateTimer, 1000);
+  }
+  updateTimer();
+
+  const options = document.querySelectorAll(".payment-option");
+  const payButton = document.getElementById("payButton");
+
+  options.forEach(option => {
+    option.addEventListener("click", () => {
+      const isSelected = option.classList.contains("selected");
+      options.forEach(opt => {
+        opt.classList.remove("selected");
+        const input = opt.querySelector("input");
+        if (input) input.checked = false;
+      });
+      if (!isSelected) {
+        option.classList.add("selected");
+        const input = option.querySelector("input");
+        if (input) input.checked = true;
+        if (payButton) {
+          payButton.disabled = false;
+          payButton.classList.add("active");
+        }
+      } else {
+        if (payButton) {
+          payButton.disabled = true;
+          payButton.classList.remove("active");
+        }
+      }
+    });
+  });
+
+  const useBonusCheckbox = document.getElementById('useBonusCheckbox');
+  const bonusInputWrapper = document.getElementById('bonusInputWrapper');
+  const bonusAmountInput = document.getElementById('bonusAmount');
+  const finalPriceDisplay = document.getElementById('finalPrice');
+
+  const totalPrice = parseFloat({{ total_price }});
+  const maxBonus = Math.min({{ bonus_points|default:0 }}, totalPrice);
+
+  if (useBonusCheckbox && bonusInputWrapper && bonusAmountInput && finalPriceDisplay) {
+    useBonusCheckbox.addEventListener('change', () => {
+      if (useBonusCheckbox.checked) {
+        bonusInputWrapper.classList.remove('d-none');
+      } else {
+        bonusInputWrapper.classList.add('d-none');
+        bonusAmountInput.value = 0;
+        finalPriceDisplay.textContent = totalPrice.toFixed(2);
+      }
+    });
+
+    bonusAmountInput.addEventListener('input', () => {
+      let used = parseInt(bonusAmountInput.value) || 0;
+      if (used > maxBonus) {
+        used = maxBonus;
+        bonusAmountInput.value = used;
+      }
+      finalPriceDisplay.textContent = (totalPrice - used).toFixed(2);
+    });
+  }
+
+  document.getElementById('payment-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
+    if (!selectedPayment) {
+      alert("Оберіть спосіб оплати!");
+      return;
+    }
+
+    const data = {
+      name: formData.get("name"),
+      phone: formData.get("phone"),
+      email: formData.get("email"),
+      payment_method: selectedPayment.value,
+      bonus_amount: (useBonusCheckbox && useBonusCheckbox.checked) ? parseInt(bonusAmountInput.value || 0) : 0
+    };
+
+    fetch("{% url 'confirm_checkout' session.id %}", {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": "{{ csrf_token }}",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        window.location.href = data.redirect_url;
+      } else {
+        alert("Помилка: " + data.error);
+      }
+    })
+    .catch(err => {
+      console.error("Fetch error:", err);
+      alert("Помилка при з'єднанні з сервером.");
+    });
+  });
+</script>
+
+{% endblock %}

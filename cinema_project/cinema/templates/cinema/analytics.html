@@ -1,0 +1,773 @@
+{% extends 'admin/base_site.html' %}
+{% load static %}
+
+{% block title %}Аналітика | {{ block.super }}{% endblock %}
+
+{% block content %}
+<h1 class="wow-title">📊 Аналітика продажів</h1>
+
+<form method="get" class="filter-form" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; margin-bottom: 30px;">
+    <label for="start_date">З:</label>
+    <input type="date" name="start_date" id="start_date" value="{{ request.GET.start_date }}">
+
+    <label for="end_date">По:</label>
+    <input type="date" name="end_date" id="end_date" value="{{ request.GET.end_date }}">
+
+    <button type="submit" class="fancy-button">🔍 Застосувати фільтр</button>
+
+    <button type="button" class="fancy-button" id="openExportModal">📤 Експорт</button>
+
+
+</form>
+
+<!-- Експортне модальне вікно -->
+<div id="exportModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h2>Що експортувати?</h2>
+    <form method="post" id="exportForm">
+      {% csrf_token %}
+      <input type="hidden" name="start_date" value="{{ request.GET.start_date }}">
+      <input type="hidden" name="end_date" value="{{ request.GET.end_date }}">
+
+      <label><input type="checkbox" name="export_fields" value="kpi" checked> 📌 KPI метрики</label>
+      <label><input type="checkbox" name="export_fields" value="avg_price" checked> 📈 Середня ціна квитка</label>
+      <label><input type="checkbox" name="export_fields" value="sales" checked> 📆 Продажі по днях</label>
+      <label><input type="checkbox" name="export_fields" value="revenue" checked> 🎬 Прибуток по фільмах</label>
+      <label><input type="checkbox" name="export_fields" value="top_movies" checked> 🎟️ Топ-10 фільмів</label>
+      <label><input type="checkbox" name="export_fields" value="top_days" checked> 📅 Топ-5 днів</label>
+      <label><input type="checkbox" name="export_fields" value="status" checked> 🧾 Статуси квитків</label>
+      <label><input type="checkbox" name="export_fields" value="halls" checked> 🏟️ По залах</label>
+      <label><input type="checkbox" name="export_fields" value="hours" checked> ⏰ По годинах</label>
+
+      <br><br>
+      <div class="export-buttons">
+        <button type="submit" name="format" value="pdf" class="fancy-button">📄 PDF</button>
+        <button type="submit" name="format" value="excel" class="fancy-button">📊 Excel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+
+<style>
+.checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+    text-align: left;
+}
+
+.export-buttons {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.modal-content form label {
+    display: block;
+    margin: 6px 0;
+    font-size: 15px;
+}
+
+.modal-content form .fancy-button {
+    margin: 0;
+}
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 999;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+}
+
+.modal-content {
+    background: var(--card-bg);
+    margin: 10% auto;
+    padding: 20px 30px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    color: var(--text-color);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    font-size: 22px;
+    text-align: center;
+}
+
+.modal-content label {
+    font-size: 16px;
+    display: block;
+    margin: 8px 0;
+}
+
+.modal .close {
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--text-color);
+    cursor: pointer;
+}
+.modal .close:hover {
+    color: red;
+}
+</style>
+
+
+<style>
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+
+
+body.dark-theme .modal-content {
+    background: #2b2b2b;
+    color: #f0f0f0;
+}
+</style>
+
+
+<div class="accordion">
+    <div class="accordion-item open">
+        <button class="accordion-toggle">📌 KPI метрики</button>
+        <div class="accordion-content">
+            <div class="kpi-container">
+                <div class="kpi-box">
+                    <h3>🎫 Всього квитків</h3>
+                    <p>{{ total_tickets }}</p>
+                </div>
+                <div class="kpi-box">
+                    <h3>💰 Загальний дохід</h3>
+                    <p>{{ total_revenue|floatformat:2 }} грн</p>
+                </div>
+                <div class="kpi-box">
+                    <h3>📅 За тиждень</h3>
+                    <p>{{ tickets_this_week }}</p>
+                </div>
+                <div class="kpi-box">
+                    <h3>🏆 Найпопулярніший фільм</h3>
+                    <p>{{ most_popular_movie }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <button class="accordion-toggle">📈 Середня ціна квитка по днях</button>
+        <div class="accordion-content">
+            <div class="chart-safe">
+                <canvas id="lineChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <button class="accordion-toggle">📆 Продажі по днях</button>
+        <div class="accordion-content">
+            <div class="chart-safe">
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <button class="accordion-toggle">🎬 Прибуток по фільмах</button>
+        <div class="accordion-content">
+            <div class="chart-circle">
+                <canvas id="pieChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="accordion-item">
+    <button class="accordion-toggle">🎟️ Топ-10 фільмів за кількістю квитків</button>
+    <div class="accordion-content">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Фільм</th>
+                    <th>Кількість квитків</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for movie in top_movies %}
+                    <tr>
+                        <td>{{ movie.session__movie__title }}</td>
+                        <td>{{ movie.count }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="accordion-item">
+    <button class="accordion-toggle">📅 Топ-5 днів за продажами</button>
+    <div class="accordion-content">
+        <table class="custom-table">
+            <thead>
+                <tr>
+                    <th>Дата</th>
+                    <th>Кількість квитків</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for day in top_days %}
+                    <tr>
+                        <td>{{ day.session__date }}</td>
+                        <td>{{ day.total }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="accordion-item">
+    <button class="accordion-toggle">🧾 Розподіл квитків за статусами</button>
+    <div class="accordion-content">
+<div class="chart-circle">
+  <canvas id="statusChart"></canvas>
+</div>
+
+    </div>
+</div>
+    <div class="accordion-item">
+    <button class="accordion-toggle">🏟️ Розподіл квитків по залах</button>
+    <div class="accordion-content">
+        <div class="chart-circle">
+            <canvas id="hallChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="accordion-item">
+    <button class="accordion-toggle">⏰ Завантаженість по годинах</button>
+    <div class="accordion-content">
+        <div class="chart-safe">
+            <canvas id="hourChart"></canvas>
+        </div>
+    </div>
+</div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const exportForm = document.getElementById("exportForm");
+    exportForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const format = e.submitter.value;
+        const chartsMap = {
+            "avg_price": "lineChart",
+            "sales": "barChart",
+            "revenue": "pieChart",
+            "status": "statusChart",
+            "halls": "hallChart",
+            "hours": "hourChart"
+        };
+
+        const selectedFields = Array.from(exportForm.querySelectorAll('input[name="export_fields"]:checked')).map(cb => cb.value);
+        const csrfToken = exportForm.querySelector('[name=csrfmiddlewaretoken]').value;
+        const startDate = exportForm.querySelector('[name=start_date]').value;
+        const endDate = exportForm.querySelector('[name=end_date]').value;
+
+        const images = {};
+
+        for (const key of selectedFields) {
+            if (chartsMap[key]) {
+                const canvasId = chartsMap[key];
+                const canvas = document.getElementById(canvasId);
+                const chartInstance = Chart.getChart(canvasId);
+
+                if (chartInstance) {
+                    // 🔧 Примусово змінюємо стиль перед знімком
+                    chartInstance.options.plugins.legend.labels.color = '#000';
+                    chartInstance.options.scales = {
+                        x: { ticks: { color: '#000' } },
+                        y: { ticks: { color: '#000' } }
+                    };
+                    chartInstance.update();
+
+                    await new Promise(r => setTimeout(r, 100));
+                    const img = await html2canvas(canvas).then(c => c.toDataURL("image/png"));
+                    images[key] = img;
+
+                    // ♻️ Повертаємо назад
+                    const theme = document.documentElement.dataset.theme;
+                    const originalColor = theme === 'dark' ? '#f0f0f0' : '#222';
+                    chartInstance.options.plugins.legend.labels.color = originalColor;
+                    chartInstance.options.scales = {
+                        x: { ticks: { color: originalColor } },
+                        y: { ticks: { color: originalColor } }
+                    };
+                    chartInstance.update();
+                }
+            }
+        }
+
+        const form = document.createElement("form");
+        form.method = "POST";
+        form.action = format === "pdf" ? "{% url 'analytics_export_pdf' %}" : "{% url 'analytics_export_excel' %}";
+        form.target = "_blank";
+
+        form.innerHTML += `<input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">`;
+        form.innerHTML += `<input type="hidden" name="start_date" value="${startDate}">`;
+        form.innerHTML += `<input type="hidden" name="end_date" value="${endDate}">`;
+
+        selectedFields.forEach(field => {
+            form.innerHTML += `<input type="hidden" name="export_fields" value="${field}">`;
+        });
+
+        for (const key in images) {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = `chart_images[${key}]`;
+            input.value = images[key];
+            form.appendChild(input);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+    });
+});
+
+
+</script>
+
+
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("exportModal");
+    const openBtn = document.getElementById("openExportModal");
+    const closeBtn = modal.querySelector(".close");
+
+    if (openBtn && modal && closeBtn) {
+        openBtn.onclick = function () {
+            modal.style.display = "block";
+        };
+
+        closeBtn.onclick = function () {
+            modal.style.display = "none";
+        };
+
+        window.onclick = function (e) {
+            if (e.target == modal) {
+                modal.style.display = "none";
+            }
+        };
+    }
+
+    // Accordion toggle
+    document.querySelectorAll('.accordion-toggle').forEach(button => {
+        button.addEventListener('click', () => {
+            const item = button.closest('.accordion-item');
+            item.classList.toggle('open');
+        });
+    });
+
+    const theme = document.documentElement.dataset.theme;
+    const textColor = theme === 'dark' ? '#f0f0f0' : '#222';
+
+    new Chart(document.getElementById("lineChart"), {
+        type: "line",
+        data: {{ line_chart_data|safe }},
+        options: {
+            responsive: true,
+            plugins: { legend: { display: true } },
+            scales: {
+                y: { ticks: { color: textColor } },
+                x: { ticks: { color: textColor } }
+            }
+        }
+    });
+
+    const barData = {{ bar_data|safe }};
+    new Chart(document.getElementById("barChart"), {
+        type: "bar",
+        data: {
+            labels: barData.labels,
+            datasets: [{
+                label: "Кількість квитків",
+                data: barData.values,
+                backgroundColor: "#007acc"
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: { beginAtZero: true, ticks: { color: textColor } },
+                x: { ticks: { color: textColor } }
+            }
+        }
+    });
+
+    const pieData = {{ pie_data|safe }};
+    new Chart(document.getElementById("pieChart"), {
+        type: "pie",
+        data: {
+            labels: pieData.labels,
+            datasets: [{
+                data: pieData.values,
+                backgroundColor: ["#007acc", "#50b7ff", "#ffb347", "#ff6666", "#66cc99"]
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: textColor }
+                }
+            }
+        }
+    });
+    const statusData = {{ status_distribution|safe }};
+    new Chart(document.getElementById("statusChart"), {
+        type: "doughnut",
+        data: {
+            labels: statusData.labels,
+            datasets: [{
+                data: statusData.values,
+                backgroundColor: ["#007bff", "#28a745", "#ffc107", "#dc3545"]
+            }]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: textColor }
+                }
+            }
+        }
+    });
+    const hallData = {{ hall_data|safe }};
+new Chart(document.getElementById("hallChart"), {
+    type: "pie",
+    data: {
+        labels: hallData.labels,
+        datasets: [{
+            data: hallData.values,
+            backgroundColor: ["#007bff", "#17a2b8", "#ffc107"]
+        }]
+    },
+    options: {
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: { color: textColor }
+            }
+        }
+    }
+});
+
+const hourlyData = {{ hourly_data|safe }};
+new Chart(document.getElementById("hourChart"), {
+    type: "bar",
+    data: {
+        labels: hourlyData.labels,
+        datasets: [{
+            label: "Кількість квитків",
+            data: hourlyData.values,
+            backgroundColor: "#6f42c1"
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: { beginAtZero: true, ticks: { color: textColor } },
+            x: { ticks: { color: textColor } }
+        }
+    }
+});
+
+
+
+});
+</script>
+
+
+
+
+<style>
+.chart-safe {
+  aspect-ratio: 16 / 9;
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+}
+
+.chart-circle {
+  width: 100%;
+  max-width: 420px;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+  position: relative;
+}
+
+.chart-circle canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+
+.chart-safe canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.chart-wrapper {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.chart-container-ratio {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  aspect-ratio: 1 / 1; /* Квадрат */
+  margin: 0 auto;
+}
+
+.chart-container-ratio canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.chart-safe canvas {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+.chart-responsive {
+  position: relative;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.chart-container canvas {
+  height: 300px !important;
+  max-width: 100%;
+}
+
+.custom-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 14px;
+    background: var(--card-bg);
+    color: var(--text-color);
+}
+.custom-table th, .custom-table td {
+    padding: 10px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    text-align: left;
+}
+body.dark-theme .custom-table {
+    color: #f0f0f0;
+}
+
+.fancy-button {
+    background: linear-gradient(45deg, #007bff, #00c6ff);
+    color: white !important;          /* 🔥 ключове */
+    border: none;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+.fancy-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 12px rgba(0, 123, 255, 0.5);
+}
+
+.filter-form {
+    text-align: right;
+    margin: 30px auto;
+    max-width: 960px;
+}
+.fancy-button:first-child {
+    margin-left: 0;
+}
+
+.wow-title {
+    text-align: center;
+    font-size: 32px;
+    font-weight: bold;
+    margin: 20px 0 30px;
+    background: linear-gradient(90deg, #007bff, #00c6ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.kpi-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    margin: 30px auto;
+}
+.kpi-box {
+    flex: 1 1 200px;
+    background: var(--card-bg);
+    color: var(--text-color);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px var(--shadow-light);
+    text-align: center;
+}
+.kpi-box h3 {
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+.kpi-box p {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--link-color);
+}
+.accordion {
+    max-width: 960px;
+    margin: 0 auto;
+}
+.accordion-item {
+    margin-bottom: 15px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px var(--shadow-light);
+}
+.accordion-toggle {
+    background: var(--card-bg);
+    color: var(--text-color);
+    padding: 14px 20px;
+    font-size: 16px;
+    width: 100%;
+    text-align: left;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+.accordion-item.open .accordion-content {
+    max-height: 1000px;
+    padding: 20px;
+}
+.accordion-content {
+    max-height: 0;
+    overflow: hidden;
+    background: var(--card-bg);
+    transition: all 0.4s ease;
+}
+.chart-box.mini {
+    padding: 10px;
+}
+
+.accordion {
+    max-width: 960px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.accordion-item {
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+    background: var(--card-bg);
+    transition: box-shadow 0.3s ease;
+}
+.accordion-toggle {
+    background: var(--card-bg);
+    color: var(--text-color);
+    padding: 16px 22px;
+    font-size: 17px;
+    width: 100%;
+    text-align: left;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.3s;
+}
+.accordion-toggle:hover {
+    background: var(--link-color);
+    color: white;
+}
+.accordion-item.open {
+    box-shadow: 0 10px 24px rgba(0, 123, 255, 0.2);
+}
+.accordion-content {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    background: var(--card-bg);
+    transition: max-height 0.5s ease, opacity 0.5s ease;
+}
+.accordion-item.open .accordion-content {
+    max-height: 1000px;
+    opacity: 1;
+    padding: 20px;
+}
+
+.chart-box.mini {
+    animation: fadeInChart 0.6s ease-in-out both;
+}
+
+@keyframes fadeInChart {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+@media (max-width: 768px) {
+    .kpi-container {
+        flex-direction: column;
+        align-items: center;
+    }
+    .accordion-toggle {
+        font-size: 16px;
+        padding: 12px 18px;
+    }
+    .fancy-button {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+</style>
+{% endblock %}

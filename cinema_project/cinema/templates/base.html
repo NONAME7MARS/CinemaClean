@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Кінотеатр{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+  {% load static %}
+  {% load plotly_dash %}
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    body.light-mode {
+      background-color: #f0f0f0;
+      color: #111;
+    }
+    body.dark-mode {
+      background: linear-gradient(-45deg, #0d0d0d, #1a1a1a, #121212, #1e1e1e);
+      background-size: 400% 400%;
+      animation: darkShift 20s ease infinite;
+      color: #ddd;
+    }
+    @keyframes darkShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    nav a.navbar-brand {
+      font-size: 32px;
+      font-weight: bold;
+      letter-spacing: 1.5px;
+      color: #4CAF50;
+      transition: color 0.3s, transform 0.3s;
+    }
+
+    nav a.navbar-brand:hover {
+      color: #56d68a;
+      transform: scale(1.05);
+    }
+
+    nav .navbar-nav .nav-link {
+      font-size: 18px;
+      padding: 8px 16px;
+      position: relative;
+      transition: color 0.3s, transform 0.3s;
+      color: #ddd;
+    }
+
+    body.light-mode nav .navbar-nav .nav-link {
+      color: #111;
+    }
+
+    nav .navbar-nav .nav-link:hover {
+      color: #4CAF50;
+      transform: translateY(-2px);
+    }
+
+    nav .navbar-nav .nav-link::after {
+      content: '';
+      display: block;
+      width: 0;
+      height: 2px;
+      background: #4CAF50;
+      transition: width 0.3s;
+      margin-top: 2px;
+    }
+
+    nav .navbar-nav .nav-link:hover::after {
+      width: 100%;
+    }
+
+    .theme-toggle {
+      border: none;
+      background: #333;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      font-weight: bold;
+      margin-left: 16px;
+    }
+
+    .theme-toggle:hover {
+      transform: rotate(10deg) scale(1.05);
+      box-shadow: 0 0 15px #4CAF50;
+    }
+
+    body.light-mode .theme-toggle {
+      background: #e0e0e0;
+      color: #000;
+    }
+
+    .search-container {
+      position: relative;
+      margin-left: 16px;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-icon {
+      font-size: 22px;
+      cursor: pointer;
+      color: white;
+      transition: color 0.3s ease;
+    }
+
+    body.light-mode .search-icon {
+      color: black;
+    }
+
+    .search-input {
+      width: 0;
+      padding: 8px 0;
+      margin-left: 8px;
+      opacity: 0;
+      border: none;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      backdrop-filter: blur(4px);
+      transition: all 0.4s ease;
+    }
+
+    .search-input.expanded {
+      width: 240px;
+      opacity: 1;
+      padding: 8px 12px;
+    }
+
+    body.light-mode .search-input {
+      background: rgba(0,0,0,0.05);
+      color: black;
+    }
+
+    .search-suggestions {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: 240px;
+      background: rgba(255,255,255,0.05);
+      list-style: none;
+      padding: 0;
+      margin-top: 6px;
+      border-radius: 8px;
+      overflow: hidden;
+      max-height: 240px;
+      overflow-y: auto;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 4px 10px rgba(0,255,0,0.2);
+      z-index: 1000;
+      display: none;
+    }
+
+    .search-suggestions li {
+      padding: 10px 14px;
+      cursor: pointer;
+      color: white;
+      transition: background 0.3s ease;
+    }
+
+    .search-suggestions li:hover {
+      background: rgba(0,255,0,0.15);
+    }
+
+    body.light-mode .search-suggestions {
+      background: rgba(0,0,0,0.05);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    body.light-mode .search-suggestions li {
+      color: black;
+    }
+
+    body.light-mode .search-suggestions li:hover {
+      background: rgba(0,0,0,0.1);
+    }
+
+    footer {
+      padding: 40px 0;
+    }
+
+    body.light-mode footer {
+      background-color: #f0f0f0;
+      color: #111;
+    }
+
+    body.dark-mode footer {
+      background-color: #121212;
+      color: #ddd;
+    }
+
+    footer h5 {
+      color: #4CAF50;
+    }
+
+    footer h5:hover {
+      color: #56d68a;
+    }
+
+    footer a {
+      color: #aaaaaa;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      color: #4CAF50;
+    }
+
+    footer .social-icons a {
+      font-size: 24px;
+      margin-right: 15px;
+      transition: color 0.3s, transform 0.3s;
+      color: #888888;
+    }
+
+      footer .social-icons a:hover {
+        color: #4CAF50;
+        transform: scale(1.2);
+      }
+
+      footer hr {
+        border-color: #333;
+      }
+
+      /* Responsive tweaks for mobile devices */
+      @media (max-width: 576px) {
+        nav .navbar-nav {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        nav .navbar-nav .nav-link {
+          padding: 10px 0;
+        }
+
+        .search-container {
+          margin-left: 0;
+          margin-top: 10px;
+          width: 100%;
+        }
+
+        .search-input.expanded {
+          width: 100%;
+        }
+
+        footer .col-md-4 {
+          flex: 0 0 100%;
+          max-width: 100%;
+          margin-bottom: 20px;
+        }
+      }
+  </style>
+  <link rel="icon" href="{% static 'images/img.png' %}" type="image/png">
+  <link rel="apple-touch-icon" href="{% static 'img.png' %}">
+  <meta name="theme-color" content="#111">
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg shadow-sm px-3 py-2">
+    <div class="container-fluid">
+<a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'movie_list' %}">
+  <i class="bi bi-star-fill text-warning fs-4"></i>
+  <span>Кінотеатр</span>
+</a>
+
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav">
+          <li class="nav-item"><a class="nav-link" href="{% url 'movie_list' %}">Афіша</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'contacts' %}">Контакти</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">Про нас</a></li>
+          {% if not request.user.is_authenticated %}
+            <li class="nav-item">
+              <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#loginModal">Вхід</a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'user_dashboard' %}">Мій кабінет</a>
+            </li>
+          {% endif %}
+        </ul>
+        <button class="theme-toggle ms-3" onclick="toggleTheme()"><span id="themeIcon">🌙</span></button>
+        <div class="search-container ms-3">
+          <i class="bi bi-search search-icon" id="searchToggle"></i>
+          <input type="text" id="searchInput" class="search-input" placeholder="Пошук фільму...">
+          <ul id="autocomplete-list" class="search-suggestions"></ul>
+        </div>
+
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mt-4">
+    {% block content %}{% endblock %}
+  </main>
+  <!-- Login Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+<div class="modal-dialog">
+  <div class="modal-content login-modal-content p-4">
+    <div class="modal-header border-0">
+      <h5 class="modal-title w-100 text-center" id="loginModalLabel">🔐 Вхід до кабінету</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+    </div>
+    <div class="modal-body">
+      <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+        <div class="form-group mb-3">
+          <label for="id_username">Логін</label>
+          <input type="text" name="username" class="form-control" id="id_username" required />
+        </div>
+        <div class="form-group mb-3">
+          <label for="id_password">Пароль</label>
+          <input type="password" name="password" class="form-control" id="id_password" required />
+        </div>
+        <button type="submit" class="btn btn-success w-100 fw-bold">Увійти</button>
+      </form>
+      <div class="text-center mt-3">
+        <small>Ще не маєте акаунта?
+          <a href="{% url 'register' %}" class="text-decoration-underline">Зареєструватися</a></small>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+  {% if not hide_footer %}
+<footer>
+  <div class="container py-5">
+    <div class="row">
+      <!-- Колонка: Про нас -->
+      <div class="col-md-4 mb-4 mb-md-0">
+        <h5>Про нас</h5>
+        <p>🎬 Ми — сучасний кінотеатр із найкращими залами, звуком та атмосферою. Переглядайте новинки у 2D, 3D або IMAX форматах.</p>
+      </div>
+
+      <!-- Колонка: Посилання -->
+      <div class="col-md-4 mb-4 mb-md-0">
+        <h5>Навігація</h5>
+        <ul class="list-unstyled">
+          <li><a href="{% url 'movie_list' %}">Афіша</a></li>
+          <li><a href="{% url 'contacts' %}">Контакти</a></li>
+          <li><a href="{% url 'about' %}">Про нас</a></li>
+          <li><a href="{% url 'faq' %}">FAQ</a></li>
+        </ul>
+      </div>
+
+      <!-- Колонка: Соцмережі -->
+      <div class="col-md-4">
+        <h5>Слідкуйте за нами</h5>
+        <p>Підписуйтесь на новини та розіграші квитків 👇</p>
+        <div class="d-flex gap-3">
+          <a href="#" class="text-decoration-none" aria-label="Facebook">
+            <i class="bi bi-facebook fs-4"></i>
+          </a>
+          <a href="#" class="text-decoration-none" aria-label="Instagram">
+            <i class="bi bi-instagram fs-4"></i>
+          </a>
+          <a href="#" class="text-decoration-none" aria-label="Twitter">
+            <i class="bi bi-twitter fs-4"></i>
+          </a>
+          <a href="#" class="text-decoration-none" aria-label="YouTube">
+            <i class="bi bi-youtube fs-4"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <hr class="my-4" />
+
+    <!-- Підвал -->
+    <div class="text-center">
+      <p class="mb-0">&copy; 2025 Кінотеатр. Всі права захищені.</p>
+    </div>
+  </div>
+
+  <style>
+  .navbar-brand i {
+  transition: transform 0.2s ease;
+}
+.navbar-brand:hover i {
+  transform: scale(1.2);
+}
+
+  .login-modal-content {
+  background: var(--card-bg, #1a1a1a);
+  color: var(--text-color, #fff);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 30px rgba(0, 255, 0, 0.1);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+body.light-mode .login-modal-content {
+  background: #fff;
+  color: #111;
+  border: 1px solid #ddd;
+}
+
+.login-modal-content .form-control {
+  background-color: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+body.light-mode .login-modal-content .form-control {
+  background-color: #f9f9f9;
+  color: #000;
+  border: 1px solid #ccc;
+}
+
+.login-modal-content .form-control:focus {
+  border-color: #4CAF50;
+  background-color: rgba(255,255,255,0.08);
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.3);
+}
+
+    footer {
+      background-color: var(--footer-bg, #121212);
+      color: var(--footer-text, #ddd);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    body.light-mode footer {
+      --footer-bg: #f8f9fa;
+      --footer-text: #111;
+    }
+
+    body.dark-mode footer {
+      --footer-bg: #121212;
+      --footer-text: #ddd;
+    }
+
+    footer h5 {
+      font-weight: 600;
+      color: #4CAF50;
+      margin-bottom: 16px;
+    }
+
+    footer p, footer a {
+      font-size: 15px;
+      color: inherit;
+    }
+
+    footer a:hover {
+      color: #4CAF50;
+      text-decoration: none;
+    }
+
+    footer .bi {
+      color: inherit;
+      transition: color 0.3s ease, transform 0.3s ease;
+    }
+
+    footer .bi:hover {
+      color: #4CAF50;
+      transform: scale(1.2);
+    }
+
+    footer hr {
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    body.light-mode footer hr {
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</footer>
+
+  {% endif %}
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const body = document.body;
+      const icon = document.getElementById("themeIcon");
+      const isLight = body.classList.contains("light-mode");
+      html.classList.toggle("light-mode", !isLight);
+      html.classList.toggle("dark-mode", isLight);
+      body.classList.toggle("light-mode", !isLight);
+      body.classList.toggle("dark-mode", isLight);
+      localStorage.setItem("theme", !isLight ? "light" : "dark");
+      icon.textContent = !isLight ? "☀️" : "🌙";
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const savedTheme = localStorage.getItem("theme");
+      const html = document.documentElement;
+      const body = document.body;
+      const icon = document.getElementById("themeIcon");
+
+      if (savedTheme) {
+        html.classList.add(savedTheme + "-mode");
+        body.classList.add(savedTheme + "-mode");
+        icon.textContent = savedTheme === "light" ? "☀️" : "🌙";
+      } else {
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        const theme = prefersDark ? "dark" : "light";
+        html.classList.add(theme + "-mode");
+        body.classList.add(theme + "-mode");
+        icon.textContent = prefersDark ? "🌙" : "☀️";
+      }
+    });
+
+    document.getElementById("searchToggle").addEventListener("click", () => {
+      const input = document.getElementById("searchInput");
+      input.classList.toggle("expanded");
+      if (input.classList.contains("expanded")) input.focus();
+    });
+
+    const searchInput = document.getElementById("searchInput");
+    const list = document.getElementById("autocomplete-list");
+
+    searchInput.addEventListener("input", function () {
+      const query = this.value.trim();
+      list.innerHTML = "";
+
+      if (query.length < 2) {
+        list.style.display = "none";
+        return;
+      }
+
+      fetch(`/autocomplete_movies/?term=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.length > 0) {
+            list.style.display = "block";
+            data.forEach(movie => {
+              const item = document.createElement("li");
+              item.innerHTML = `
+                <a href="${movie.url}" style="display:flex; align-items:center; text-decoration:none; color:inherit; padding:6px; gap:10px;">
+                  <img src="${movie.poster}" alt="${movie.title}" style="width:60px; height:40px; object-fit:cover; border-radius:4px;">
+                  <span>${movie.title}</span>
+                </a>`;
+              list.appendChild(item);
+            });
+          } else {
+            list.style.display = "none";
+          }
+        });
+    });
+  </script>
+</body>
+</html>

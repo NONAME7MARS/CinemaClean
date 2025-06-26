@@ -1,0 +1,64 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Аналітика | {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <h3>🎟️ Всього квитків</h3>
+        <p>{{ total_tickets }}</p>
+    </div>
+    <div class="kpi-card">
+        <h3>💰 Загальний прибуток</h3>
+        <p>{{ total_revenue }} грн</p>
+    </div>
+    <div class="kpi-card">
+        <h3>📆 За тиждень</h3>
+        <p>{{ tickets_this_week }}</p>
+    </div>
+    <div class="kpi-card">
+        <h3>🏆 Найпопулярніший фільм</h3>
+        <p>{{ most_popular_movie }}</p>
+    </div>
+</div>
+
+<style>
+.kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.kpi-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px var(--shadow-light);
+    transition: transform 0.2s ease;
+    text-align: center;
+}
+
+.kpi-card h3 {
+    font-size: 16px;
+    color: var(--link-color);
+    margin-bottom: 10px;
+}
+
+.kpi-card p {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.kpi-card:hover {
+    transform: translateY(-3px);
+}
+
+body.dark-theme .kpi-card {
+    background: var(--card-bg);
+    color: var(--text-color);
+}
+</style>
+{% endblock %}

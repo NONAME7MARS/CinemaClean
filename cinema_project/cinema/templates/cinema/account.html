@@ -1,0 +1,1006 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Мій кабінет{% endblock %}
+
+{% block content %}
+{% if messages %}
+  <div class="message-container">
+    {% for message in messages %}
+      <div div class="alert flash-message">{{ message }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+<div class="account-container mb-5">
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <h2 class="account-title m-0">👤 Персональний кабінет</h2>
+  <div class="d-flex gap-2">
+    {% if is_admin_user %}
+        <a href="{% url 'admin:index' %}" class="btn btn-outline-primary">⚙️ Адмін-панель</a>
+    {% endif %}
+    <a href="{% url 'edit_profile' %}" class="btn btn-primary">Редагувати профіль</a>
+    <a href="{% url 'logout' %}" class="btn btn-outline-danger">🚪 Вийти</a>
+  </div>
+</div>
+
+  <div class="user-info mb-4">
+    <div><strong>Ім’я:</strong> {{ request.user.first_name }} {{ request.user.last_name }}</div>
+    <div><strong>Електронна пошта:</strong> {{ request.user.email }}</div>
+    <div><strong>Бонусні бали:</strong> {{ bonus_points }}</div>
+  </div>
+<hr class="my-4" />
+<h4 class="text-center mb-3">🏆 Бонуси, знижки, статус</h4>
+
+<div class="row">
+<div class="col-md-6 mb-3 d-flex">
+  <div class="p-3 rounded flex-fill d-flex flex-column justify-content-between" style="background: var(--card-bg); border: 1px solid #444; min-height: 240px;">
+    <div>
+      <span class="badge-status status-{{ user_status_class }}">
+        {{ user_level }}
+      </span>
+      <p class="mt-2"><strong>Бонусний баланс:</strong> {{ bonus_points }} балів</p>
+    </div>
+<div class="progress-wrapper mt-4 position-relative">
+  <!-- Маркер на прогрес-барі -->
+<div class="progress-marker flipped" style="left: {{ bonus_progress }}%;">
+  🔺
+</div>
+
+
+  <div class="progress beautiful-progress">
+    <div class="progress-bar" style="width: {{ bonus_progress }}%;"></div>
+  </div>
+
+  <div class="d-flex justify-content-between mt-2 small" style="color: var(--muted-color);">
+    <span>0</span>
+    <span>300</span>
+    <span>1000</span>
+  </div>
+  <div class="d-flex justify-content-between mt-1 small" style="color: var(--muted-color);">
+    <span>🟤 Гість</span>
+    <span>🔵 Постійний клієнт</span>
+    <span>👑 VIP</span>
+  </div>
+</div>
+
+
+
+    <div class="mt-3 small" style="color: var(--muted-color);">
+      🎉 Більше квитків — більше бонусів!
+    </div>
+  </div>
+</div>
+
+
+
+  <div class="col-md-6 mb-3">
+    <div class="p-3 rounded" style="background: var(--card-bg); border: 1px solid #444;">
+      <h6>Історія бонусів</h6>
+      <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+        <table class="table table-sm table-borderless bonus-table mb-0">
+          <thead>
+            <tr>
+              <th>Дата</th>
+              <th>Подія</th>
+              <th>±</th>
+              <th>Баланс</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in bonus_history %}
+              <tr>
+                <td>{{ b.date|date:"d.m.Y" }}</td>
+                <td>{{ b.description }}</td>
+                <td>{% if b.amount > 0 %}+{% endif %}{{ b.amount }}</td>
+                <td>{{ b.balance_after }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="4"><em>Немає транзакцій</em></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+  <hr class="mb-4" />
+
+  <h4 class="text-center mb-3">🎟️ Мої квитки</h4>
+<div class="table-responsive tickets-scroll">
+  <table class="table table-hover table-tickets w-100">
+    <thead class="tickets-header">
+      <tr>
+        <th>Фільм</th>
+        <th>Дата</th>
+        <th>Час</th>
+        <th>Зал</th>
+        <th>Місце</th>
+        <th>Ціна</th>
+        <th>Статус</th>
+        <th>PDF</th>
+        <th>Мітка</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ticket in tickets %}
+        <tr>
+          <td>{{ ticket.session.movie.title }}</td>
+          <td>{{ ticket.session.date }}</td>
+          <td>{{ ticket.session.start_time }}</td>
+          <td>{{ ticket.session.hall.number }}</td>
+          <td>Ряд {{ ticket.row }}, Місце {{ ticket.seat }}</td>
+          <td>{{ ticket.price }} грн</td>
+          <td>{{ ticket.status }}</td>
+          <td>
+            <a href="{% url 'ticket_pdf' ticket.id %}" target="_blank" class="btn btn-outline-success btn-sm">
+              <i class="bi bi-file-earmark-pdf"></i> PDF
+            </a>
+          </td>
+          <td>
+            {% if ticket.visited_label == "Відвідано" %}
+              <i class="bi bi-check-circle-fill text-success"></i> {{ ticket.visited_label }}
+            {% else %}
+              <i class="bi bi-clock-history text-warning"></i> {{ ticket.visited_label }}
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="9" class="text-center">У вас поки немає квитків.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<hr class="my-4" />
+<h4 class="text-center mb-3">❤️ Мої улюблені фільми</h4>
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+  {% for movie in favorite_movies %}
+    <div class="col">
+      <div class="card h-100 shadow-sm bg-dark text-white border-0" style="background: var(--card-bg, #1e1e1e); transition: 0.3s;">
+        {% if movie.poster %}
+          <img src="{{ movie.poster.url }}" class="card-img-top" alt="{{ movie.title }}">
+        {% else %}
+          <img src="{% static 'images/no-poster.jpg' %}" class="card-img-top" alt="No Poster">
+        {% endif %}
+        <div class="card-body">
+          <h5 class="card-title">{{ movie.title }}</h5>
+          <p class="card-text">{{ movie.genre }} | {{ movie.duration }} хв</p>
+          <a href="{% url 'movie_detail' movie.id %}" class="btn btn-outline-success">🎬 Переглянути</a>
+        </div>
+      </div>
+    </div>
+  {% empty %}
+    <div class="text-center py-4 no-favorites-message">
+      У вас поки немає улюблених фільмів.
+    </div>
+  {% endfor %}
+</div>
+  <hr class="my-4">
+
+<h4 class="text-center mt-4"><i class="bi bi-chat-left-text me-2 text-primary"></i>Мої відгуки</h4>
+
+{% if reviews %}
+  <div class="row mt-3">
+    {% for review in reviews %}
+      <div class="col-12 mb-3 review-wrapper" data-review-id="{{ review.id }}">
+        <div class="p-3 rounded review-card position-relative"
+             style="background: var(--card-bg); color: var(--text-color); border: 1px solid rgba(255,255,255,0.1);">
+
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <strong>{{ review.movie.title }}</strong> –
+              <span class="text-warning fs-5">
+                {% for i in "12345" %}
+                  {% if forloop.counter <= review.rating %}★{% endif %}
+                {% endfor %}
+              </span>
+            </div>
+            <div class="review-actions d-flex gap-2">
+              <i class="bi bi-pencil edit-review-btn" title="Редагувати" data-review-id="{{ review.id }}"></i>
+              <i class="bi bi-trash delete-review-btn" title="Видалити"
+                 data-url="{% url 'delete_review_from_profile' review.id %}"
+                 data-review-id="{{ review.id }}"
+                 data-bs-toggle="modal" data-bs-target="#deleteModal"></i>
+            </div>
+          </div>
+
+          <div class="mt-2 user-review-text-{{ review.id }}">{{ review.text }}</div>
+          <small class="review-date">{{ review.created_at|date:"d.m.Y H:i" }}</small>
+
+          <!-- Форма редагування -->
+          <form method="post"
+                class="edit-review-form d-none mt-3"
+                data-review-id="{{ review.id }}"
+                data-url="{% url 'update_review_from_profile' review.id %}">
+            {% csrf_token %}
+            <div class="star-rating mb-2">
+              {% for i in "54321" %}
+                <input type="radio" id="star-{{ review.id }}-{{ i }}" name="rating" value="{{ i }}"
+                       {% if review.rating|stringformat:"s" == i %}checked{% endif %}>
+                <label for="star-{{ review.id }}-{{ i }}">★</label>
+              {% endfor %}
+            </div>
+            <textarea name="text" rows="2" class="form-control review-textarea">{{ review.text }}</textarea>
+            <button type="submit" class="btn btn-success btn-sm mt-2">Зберегти</button>
+            <button type="button" class="btn btn-secondary btn-sm mt-2 cancel-edit-btn">Скасувати</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Модальне вікно видалення -->
+  <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background-color: var(--card-bg); color: var(--text-color);">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteModalLabel">Підтвердження видалення</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+        </div>
+        <div class="modal-body">
+          Ви справді хочете видалити цей відгук?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Видалити</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% else %}
+  <p class="text-center mt-3" style="color: var(--text-color, #aaa);">У вас поки немає відгуків.</p>
+{% endif %}
+
+</div>
+<script>
+  setTimeout(() => {
+    document.querySelectorAll(".flash-message").forEach(msg => {
+      msg.style.opacity = "0";
+      setTimeout(() => msg.remove(), 1000);
+    });
+  }, 3000);
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // Показ форми редагування
+  document.querySelectorAll(".edit-review-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.reviewId;
+      const form = document.querySelector(`.edit-review-form[data-review-id="${id}"]`);
+      form.classList.remove("d-none");
+      btn.classList.add("d-none");
+    });
+  });
+
+  // Скасування редагування
+  document.querySelectorAll(".cancel-edit-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const form = btn.closest("form");
+      form.classList.add("d-none");
+      const id = form.dataset.reviewId;
+      document.querySelector(`.edit-review-btn[data-review-id="${id}"]`).classList.remove("d-none");
+    });
+  });
+
+  // AJAX-збереження редагованого відгуку
+document.querySelectorAll(".edit-review-form").forEach(form => {
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    const id = form.dataset.reviewId;
+    const formData = new FormData(form);
+
+    fetch(form.dataset.url, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": formData.get("csrfmiddlewaretoken"),
+        "X-Requested-With": "XMLHttpRequest"
+      },
+      body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        // Оновлення тексту відгуку
+        const textBlock = document.querySelector(`.user-review-text-${id}`);
+        if (textBlock) textBlock.textContent = data.text;
+
+        // Оновлення зірок
+        const starBlock = form.closest(".review-card").querySelector(".text-warning");
+        if (starBlock) {
+          let stars = "";
+          for (let i = 0; i < data.rating; i++) stars += "★";
+          starBlock.innerHTML = stars;
+        }
+
+        // Приховати форму і показати кнопку редагування
+        form.classList.add("d-none");
+        const editBtn = document.querySelector(`.edit-review-btn[data-review-id="${id}"]`);
+        if (editBtn) editBtn.classList.remove("d-none");
+      } else {
+        alert("Помилка при збереженні відгуку.");
+      }
+    })
+    .catch(err => {
+      console.error("AJAX error:", err);
+      alert("Сталася помилка під час надсилання запиту.");
+    });
+  });
+});
+
+
+  // Модальне видалення
+  let deleteUrl = "";
+  let reviewId = "";
+
+  document.querySelectorAll(".delete-review-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      deleteUrl = btn.dataset.url;
+      reviewId = btn.dataset.reviewId;
+    });
+  });
+
+  // Підтвердження видалення у модальному вікні
+  const confirmBtn = document.getElementById("confirmDeleteBtn");
+  confirmBtn?.addEventListener("click", () => {
+    fetch(deleteUrl, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value,
+        "X-Requested-With": "XMLHttpRequest"
+      },
+      credentials: "same-origin"
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        const reviewBlock = document.querySelector(`.review-wrapper[data-review-id="${reviewId}"]`);
+        if (reviewBlock) reviewBlock.remove();
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+      } else {
+        alert("Не вдалося видалити відгук.");
+      }
+    })
+    .catch(err => console.error("AJAX error:", err));
+  });
+});
+</script>
+
+
+
+<style>
+body.dark-mode .table-tickets {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+}
+
+body.dark-mode .table-tickets td,
+body.dark-mode .table-tickets th {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.message-container {
+  margin-bottom: 20px;
+}
+
+.alert {
+  padding: 12px 16px;
+  background-color: #e6ffe6;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+  border-radius: 8px;
+  font-weight: 500;
+  opacity: 1;
+  transition: opacity 1s ease;
+}
+
+body.dark-mode .alert {
+  background-color: #2a3d2a;
+  color: #c8f7c5;
+  border-color: #4caf50;
+}
+
+.progress-marker.flipped {
+  transform: translateX(-50%) rotate(180deg);
+}
+
+.beautiful-progress {
+  height: 14px;
+  border-radius: 30px;
+  background: linear-gradient(90deg, #2e2e2e, #444);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+  overflow: hidden;
+}
+
+body.light-mode .beautiful-progress {
+  background: linear-gradient(90deg, #e0e0e0, #ccc);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.beautiful-progress .progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #00c853, #b2ff59);
+  transition: width 0.6s ease;
+  border-radius: 30px 0 0 30px;
+}
+
+/* Маркер над прогрес-баром */
+.progress-marker {
+  position: absolute;
+  top: -24px;
+  transform: translateX(-50%);
+  font-size: 18px;
+  transition: left 0.6s ease;
+  pointer-events: none;
+}
+
+/* Адаптація для мобільних */
+@media (max-width: 768px) {
+  .progress-marker {
+    font-size: 16px;
+    top: -20px;
+  }
+}
+
+.tickets-scroll {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--muted-color);
+  border-radius: 10px;
+}
+
+/* Робимо шапку фіксованою */
+.tickets-scroll table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.tickets-scroll thead th {
+  position: sticky;
+  top: 0;
+  background: var(--card-bg);
+  z-index: 2;
+}
+.bonus-info-text {
+  font-size: 16px;
+  color: var(--text-color, #fff);
+  margin-bottom: 12px;
+  transition: color 0.3s;
+}
+
+body.light-mode .bonus-info-text {
+  color: #111;
+}
+
+/* Темна тема: бонусна таблиця */
+body:not(.light-mode) .bonus-table {
+  background-color: transparent !important;
+  color: var(--text-color) !important;
+}
+
+body:not(.light-mode) .bonus-table thead th {
+  background-color: #2a2a2a !important;
+  color: var(--text-color) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body:not(.light-mode) .bonus-table tbody td {
+  background-color: transparent !important;
+  color: var(--text-color) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Альтернативно: примусово скинути Bootstrap */
+body:not(.light-mode) .bonus-table .table-dark,
+body:not(.light-mode) .bonus-table .table {
+  background-color: transparent !important;
+  color: var(--text-color) !important;
+}
+.badge-status {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.status-guest {
+  background-color: gray;
+  color: white;
+}
+
+.status-client {
+  background-color: royalblue;
+  color: white;
+}
+
+.status-vip {
+  background-color: gold;
+  color: black;
+}
+
+.bonus-table {
+  width: 100%;
+  background-color: transparent;
+  color: var(--text-color);
+  border-collapse: collapse;
+}
+
+.bonus-table thead th {
+  background-color: transparent;
+  color: var(--text-color);
+  font-weight: bold;
+  border-bottom: 1px solid var(--muted-color);
+  padding: 8px 12px;
+}
+
+.bonus-table tbody td {
+  padding: 8px 12px;
+  color: var(--text-color);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Темна тема */
+body:not(.light-mode) .bonus-table {
+  background-color: transparent;
+}
+
+body:not(.light-mode) .bonus-table thead th,
+body:not(.light-mode) .bonus-table tbody td {
+  color: var(--text-color);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Світла тема */
+body.light-mode .bonus-table {
+  background-color: #fff;
+  color: #111;
+}
+
+body.light-mode .bonus-table thead th {
+  color: #000;
+  border-bottom: 1px solid #ccc;
+}
+
+body.light-mode .bonus-table tbody td {
+  color: #111;
+  border-top: 1px solid #eee;
+}
+.review-actions i {
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text-color);
+  transition: transform 0.2s, color 0.2s;
+}
+
+.review-actions i:hover {
+  transform: scale(1.2);
+  color: #4CAF50;
+}
+
+.modal-content {
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  transition: all 0.3s ease-in-out;
+}
+
+.modal-header, .modal-body, .modal-footer {
+  background-color: var(--info-bg);
+  color: var(--text-color);
+  border: none;
+}
+
+.modal-footer .btn:hover {
+  transform: scale(1.05);
+}
+.review-actions i {
+  color: var(--text-color, #fff); /* або явний колір, наприклад: color: #999; */
+}
+body.light-mode .review-actions i {
+  color: #555;
+}
+
+
+.review-actions i {
+  cursor: pointer;
+  font-size: 1.2rem;
+  opacity: 0.7;
+  transition: 0.2s;
+}
+
+.review-actions i:hover {
+  opacity: 1;
+  transform: scale(1.2);
+  color: #4CAF50;
+}
+
+:root {
+  --card-bg: #1e1e1e;
+  --text-color: #f5f5f5;
+  --muted-color: #aaa;
+   --info-bg: #2a2a2a;
+  --badge-bg: #444;
+  --badge-text: #fff;
+  --blue: #3498db;
+  --blue-hover: #2980b9;
+
+  --danger: #e74c3c;
+  --danger-hover: #c0392b;
+
+  --success: #4caf50;
+  --success-hover: #388e3c;
+
+  --text-light: #111;
+  --text-dark: #eee;
+}
+
+body.light-mode {
+  --card-bg: #fff;
+  --text-color: #111;
+  --muted-color: #555;
+   --info-bg: #f9f9f9;
+  --badge-bg: #e0e0e0;
+  --badge-text: #000;
+}
+.review-card {
+  transition: all 0.3s ease;
+  background: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.review-card:hover {
+  border-color: #4CAF50;
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.2);
+}
+
+.review-card .text-warning {
+  color: gold !important;
+}
+
+.review-card small {
+  color: var(--muted-color);
+}
+
+.review-date {
+  color: var(--muted-color, #aaa);
+  font-size: 14px;
+}
+
+body.light-mode .review-date {
+  color: #555;
+}
+.review-card {
+  transition: all 0.3s ease;
+  background: var(--card-bg, #1c1c1c);
+  color: var(--text-color, #fff);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.review-card:hover {
+  border-color: #4CAF50;
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.2);
+}
+
+.review-card .text-warning {
+  color: gold !important;
+}
+
+.review-card small {
+  color: var(--muted-color, #aaa);
+}
+
+body.light-mode .review-card {
+  background: #fff;
+  color: #000;
+  border: 1px solid #ddd;
+}
+
+body.light-mode .review-card small {
+  color: #555;
+}
+body.light-mode .card.bg-dark {
+  background-color: #fff !important;
+  color: #000 !important;
+  border: 1px solid #ddd;
+}
+
+body.light-mode .card.bg-dark .card-title,
+body.light-mode .card.bg-dark .card-text {
+  color: #000;
+}
+
+body.light-mode .card.bg-dark .btn-outline-success {
+  border-color: #4CAF50;
+  color: #4CAF50;
+}
+
+body.light-mode .card.bg-dark .btn-outline-success:hover {
+  background-color: #4CAF50;
+  color: #fff;
+}
+
+  .review-card {
+    transition: all 0.3s ease;
+  }
+
+  .review-card:hover {
+    border-color: #4CAF50;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.2);
+  }
+
+  body.light-mode .review-card {
+    background: #fff;
+    color: #000;
+    border: 1px solid #ddd;
+  }
+.no-favorites-message {
+  font-size: 18px;
+  color: var(--text-color, #fff);
+  transition: color 0.3s ease;
+}
+body.light-mode .no-favorites-message {
+  color: #111;
+}
+
+.table-tickets {
+  white-space: nowrap;
+  width: 100%;
+}
+
+.table-tickets td, .table-tickets th {
+  white-space: nowrap;
+  vertical-align: middle;
+  padding: 10px 14px;
+}
+
+.account-container {
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 30px 40px;
+  background: var(--card-bg, #1e1e1e);
+  color: var(--text-color, #fff);
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 255, 0, 0.05);
+  transition: background 0.3s, color 0.3s;
+}
+body.light-mode .account-container {
+  background: #fff;
+  color: #111;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+}
+.account-title {
+  font-size: 28px;
+  color: var(--link-color, #4CAF50);
+}
+.user-info {
+  font-size: 16px;
+  line-height: 1.7;
+  background-color: rgba(255,255,255,0.02);
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+body.light-mode .user-info {
+  background-color: #f9f9f9;
+  border-color: #ddd;
+}
+.table-tickets {
+  border-radius: 12px;
+  overflow: hidden;
+}
+.table-header {
+  background: var(--table-head-bg, #333);
+  color: #fff;
+}
+body.light-mode .table-header {
+  background: #e0e0e0;
+  color: #111;
+}
+.table-tickets td, .table-tickets th {
+  vertical-align: middle;
+}
+:root {
+  --card-bg: #1e1e1e;
+  --text-color: #f5f5f5;
+  --muted-color: #aaa;
+  --info-bg: #2a2a2a;
+}
+
+body.light-mode {
+  --card-bg: #fff;
+  --text-color: #111;
+  --muted-color: #555;
+  --info-bg: #f9f9f9;
+}
+
+.review-card {
+  background: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 15px;
+  transition: 0.3s;
+}
+
+.review-card:hover {
+  border-color: #4CAF50;
+  box-shadow: 0 0 15px rgba(76, 175, 80, 0.2);
+}
+
+.review-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.review-actions i {
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text-color);
+  transition: 0.2s;
+}
+
+.review-actions i:hover {
+  transform: scale(1.2);
+  color: #4CAF50;
+}
+
+/* rating stars */
+.star-rating {
+  direction: rtl;
+  font-size: 1.6rem;
+  display: inline-flex;
+  gap: 0.2em;
+}
+
+.star-rating input {
+  display: none;
+}
+
+.star-rating label {
+  color: #666;
+  cursor: pointer;
+  transition: transform 0.2s, color 0.2s;
+}
+
+.star-rating input:checked ~ label,
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+  color: gold;
+  transform: scale(1.2);
+}
+
+/* textarea */
+.review-textarea {
+  background-color: var(--info-bg);
+  color: var(--text-color);
+  border: 1px solid #555;
+  border-radius: 8px;
+  padding: 10px;
+  transition: 0.3s;
+  width: 100%;
+}
+
+.review-textarea:focus {
+  border: 1px solid #4CAF50;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.25);
+}
+
+/* modal */
+.modal-content {
+  border-radius: 12px;
+  background-color: var(--info-bg);
+  color: var(--text-color);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  transition: all 0.3s ease-in-out;
+}
+
+.modal-footer .btn:hover {
+  transform: scale(1.05);
+}
+body.dark-mode {
+  --text-light: #eee;
+  --text-dark: #111;
+}
+
+.btn {
+  display: inline-block;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 1.5px solid;
+  background: transparent;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  margin-right: 10px;
+}
+
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0.08;
+  z-index: -1;
+  border-radius: inherit;
+  transition: opacity 0.3s ease;
+}
+
+.btn:hover::before {
+  opacity: 0.15;
+}
+
+/* 🔵 Синя кнопка */
+.btn-outline-primary {
+  color: var(--blue);
+  border-color: var(--blue);
+}
+.btn-outline-primary:hover {
+  background-color: var(--blue);
+  color: white;
+}
+
+/* ✅ Зелена */
+.btn-primary {
+  color: var(--success);
+  border-color: var(--success);
+}
+.btn-primary:hover {
+  background-color: var(--success-hover);
+  color: white;
+}
+
+/* 🔴 Червона */
+.btn-outline-danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.btn-outline-danger:hover {
+  background-color: var(--danger-hover);
+  color: white;
+}
+/* ✅ Зелена кнопка "Зберегти" */
+.btn-success {
+  background-color: var(--success, #4caf50);
+  color: white;
+  border: none;
+  transition: 0.3s;
+}
+
+.btn-success:hover {
+  background-color: var(--success-hover, #388e3c);
+}
+
+/* 🟫 Сіра кнопка "Скасувати" */
+.btn-secondary {
+  background-color: var(--muted-color, #777);
+  color: white;
+  border: none;
+  transition: 0.3s;
+}
+
+.btn-secondary:hover {
+  background-color: #555;
+  color: white;
+}
+
+body.light-mode .btn-secondary {
+  background-color: #ccc;
+  color: #111;
+}
+
+body.light-mode .btn-secondary:hover {
+  background-color: #bbb;
+  color: #111;
+}
+
+</style>
+{% endblock %}

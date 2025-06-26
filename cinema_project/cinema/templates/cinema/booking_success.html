@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Успішне бронювання{% endblock %}
+
+{% block content %}
+<div class="container mt-5 mb-5">
+  <div class="text-center mb-4">
+    <h2 class="text-success">✅ Бронювання успішне!</h2>
+    <p class="lead">Дякуємо за покупку! Ваші квитки:</p>
+  </div>
+
+  <div class="row justify-content-center">
+    {% for ticket in tickets %}
+      <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm mb-4">
+          <div class="card-body">
+            <h5 class="card-title">🎬 {{ ticket.session.movie.title }}</h5>
+            <p class="card-text">
+              <strong>📅 Дата:</strong> {{ ticket.session.date|date:"d.m.Y" }}<br>
+              <strong>🕒 Час:</strong> {{ ticket.session.start_time|time:"H:i" }} – {{ ticket.session.end_time|time:"H:i" }}<br>
+              <strong>💺 Місце:</strong> Ряд {{ ticket.seat_number|calculate_row }}, Місце {{ ticket.seat_number|calculate_seat }}<br>
+              <strong>🏷 Тип:</strong> {% if ticket.seat_number > 90 %}VIP{% else %}Стандарт{% endif %}<br>
+              <strong>💵 Ціна:</strong> {{ ticket.price }} грн
+            </p>
+            <a href="{% url 'ticket_pdf' ticket.id %}" target="_blank" class="btn btn-outline-primary w-100">
+              ⬇ Переглянути квиток (PDF)
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+  :root {
+    --card-bg: #fff;
+    --card-border: #ddd;
+    --card-text: #333;
+    --card-muted: #555;
+    --lead-color: #555;
+  }
+
+  body.dark-mode {
+    --card-bg: #1f1f1f;
+    --card-border: #444;
+    --card-text: #eee;
+    --card-muted: #bbb;
+    --lead-color: #ccc;
+  }
+
+  .card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-left: 5px solid #4CAF50;
+    transition: transform 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+  }
+
+  .card-title {
+    color: var(--card-text);
+  }
+
+  .card-text {
+    font-size: 15px;
+    color: var(--card-muted);
+    line-height: 1.6;
+  }
+
+  .btn-outline-primary {
+    font-weight: bold;
+  }
+
+  .text-success {
+    font-weight: bold;
+    font-size: 28px;
+  }
+
+  .lead {
+    font-size: 18px;
+    color: var(--lead-color);
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .text-success {
+      font-size: 24px;
+    }
+    .lead {
+      font-size: 16px;
+    }
+    .card-text {
+      font-size: 14px;
+    }
+  }
+</style>
+{% endblock %}

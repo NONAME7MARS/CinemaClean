@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="profile-edit-wrapper">
+  <h2>Редагування профілю</h2>
+
+  {% if messages %}
+    <div class="message-container">
+      {% for message in messages %}
+        <div class="alert flash-message">{{ message }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="POST" class="profile-form">
+    {% csrf_token %}
+
+    <div class="form-block">
+      <label for="id_first_name">Ім’я</label>
+      <input type="text" name="first_name" id="id_first_name" value="{{ profile_form.first_name.value|default_if_none:'' }}" required>
+      {% if profile_form.first_name.errors %}
+        <div class="error">{{ profile_form.first_name.errors.0 }}</div>
+      {% endif %}
+    </div>
+
+    <div class="form-block">
+      <label for="id_last_name">Прізвище</label>
+      <input type="text" name="last_name" id="id_last_name" value="{{ profile_form.last_name.value|default_if_none:'' }}" required>
+      {% if profile_form.last_name.errors %}
+        <div class="error">{{ profile_form.last_name.errors.0 }}</div>
+      {% endif %}
+    </div>
+
+    <div class="form-block">
+      <label for="id_email">Email</label>
+      <input type="email" name="email" id="id_email" value="{{ profile_form.email.value|default_if_none:'' }}" required>
+      {% if profile_form.email.errors %}
+        <div class="error">{{ profile_form.email.errors.0 }}</div>
+      {% endif %}
+    </div>
+
+    <h3>Зміна паролю</h3>
+
+    <div class="form-block">
+      <label for="id_old_password">Старий пароль</label>
+      <input type="password" name="old_password" id="id_old_password">
+      {% if password_form.old_password.errors %}
+        <div class="error">{{ password_form.old_password.errors.0 }}</div>
+      {% endif %}
+    </div>
+
+    <div class="form-block">
+      <label for="id_new_password1">Новий пароль</label>
+      <input type="password" name="new_password1" id="id_new_password1">
+      {% if password_form.new_password1.errors %}
+        <div class="error">{{ password_form.new_password1.errors.0 }}</div>
+      {% endif %}
+    </div>
+
+    <div class="form-block">
+      <label for="id_new_password2">Підтвердження нового паролю</label>
+      <input type="password" name="new_password2" id="id_new_password2">
+      {% if password_form.new_password2.errors %}
+        <div class="error">{{ password_form.new_password2.errors.0 }}</div>
+      {% endif %}
+    </div>
+
+    <button type="submit" class="btn-submit">Зберегти зміни</button>
+    <a href="{% url 'user_dashboard' %}" class="btn-back">← Повернутися до кабінету</a>
+  </form>
+</div>
+
+<style>
+:root {
+  --highlight: #4caf50;
+  --error: #e53935;
+  --message-bg: #e6ffe6;
+  --message-border: #4caf50;
+  --message-text: #111;
+}
+
+body.dark-mode {
+  --message-bg: #2e4d2e;
+  --message-border: #4caf50;
+  --message-text: #fff;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.profile-edit-wrapper {
+  max-width: 600px;
+  margin: 40px auto;
+  background-color: var(--sidebar-bg);
+  border: 1px solid var(--border);
+  padding: 30px 32px;
+  border-radius: 14px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+  transition: background 0.3s, border 0.3s;
+}
+
+.profile-edit-wrapper h2 {
+  font-size: 26px;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.profile-edit-wrapper h3 {
+  font-size: 20px;
+  margin-top: 30px;
+  margin-bottom: 20px;
+}
+
+.profile-form .form-block {
+  margin-bottom: 20px;
+}
+
+.profile-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.profile-form input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 16px;
+  background-color: var(--input-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.profile-form input:focus {
+  border-color: var(--highlight);
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.25);
+  outline: none;
+}
+
+.error {
+  color: var(--error);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 14px;
+  background-color: var(--highlight);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-back {
+  display: inline-block;
+  margin-top: 15px;
+  text-align: center;
+  text-decoration: none;
+  color: var(--highlight);
+  font-weight: bold;
+}
+
+.flash-message {
+  background-color: var(--message-bg, #e6ffe6);
+  border: 1px solid var(--message-border, #4caf50);
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  color: var(--message-text, #111);
+  transition: opacity 1s ease, background 0.3s ease;
+}
+</style>
+
+<script>
+  setTimeout(() => {
+    document.querySelectorAll(".flash-message").forEach(msg => {
+      msg.style.opacity = "0";
+      setTimeout(() => msg.remove(), 1000);
+    });
+  }, 3000);
+</script>
+{% endblock %}
